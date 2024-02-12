@@ -30,6 +30,10 @@ void Stack::setDeleteCallback( void (*delcb)(void* pt) ){
 }
 
 void* Stack::peek(){
+    if(Stack::head == nullptr){
+        cout<<"Stack is empty"<<endl;
+        return nullptr;
+    }
     return Stack::head->data;
 }
 
@@ -40,21 +44,29 @@ void Stack::push( void* dat ){
 }
 
 void* Stack::pop(){
+    if(Stack::head == nullptr){
+        cout<<"Stack is empty"<<endl;
+        return nullptr;
+    }
     Stack::Link* temp = Stack::head;
     Stack::head = Stack::head->next;
     void* val = temp->data;
     temp->data = nullptr;
     temp->next = nullptr;
+    delete temp;
     return val;
 }
 
 void Stack::cleanup(){
-    while(Stack::head->next != nullptr){
+    if(Stack::head == nullptr){
+        cout<<"Stack is empty"<<endl;
+    }
+    while(Stack::head != nullptr){
         Stack::deletecb(Stack::pop());
     }
-    Stack::deletecb(Stack::pop());
 }
 
 Stack::~Stack(){
     Stack::cleanup();
+    delete Stack::head;
 }
