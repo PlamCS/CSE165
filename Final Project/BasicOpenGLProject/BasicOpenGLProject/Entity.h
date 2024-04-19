@@ -5,12 +5,17 @@ using namespace std;
 
 class Entity
 {
+	float size;
 public:
 	float x;
 	float y;
-	void draw();
-	void move(float x, float y);
-	bool collidesWith(float otherX, float otherY);
+	Entity(float x, float y, float size);
+	
+	float getX();
+	float getY();
+	void setX(float value);
+	void setY(float value);
 
+	void draw();
 
 };

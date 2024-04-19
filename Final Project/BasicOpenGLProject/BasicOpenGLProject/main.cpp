@@ -13,11 +13,13 @@
 // http://freeglut.sourceforge.net/docs/api.php#WindowCallback
 //-----------------------------------------------------------------------------
 
-const float moveSpeed = 0.020f;
-const int updateInterval = 16;
+extern const float MOVESPEED = 0.02f;
+const int UPDATEINTERVAL = 16;
+const float PLAYERSIZE = 0.2f;
+
 bool* keyStates = new bool[256];
 Map map = Map();
-Entity Player = Entity();
+Entity Player = Entity(0.0f, 0.0f, PLAYERSIZE);
 
 void keyboard_func( unsigned char key, int x, int y )
 {
@@ -51,21 +53,27 @@ void update(int value) {
 	float dx = 0.0f;
 	float dy = 0.0f;
 
-	if (keyStates['w']) dy += moveSpeed;
-	if (keyStates['s']) dy -= moveSpeed;
-	if (keyStates['a']) dx -= moveSpeed;
-	if (keyStates['d']) dx += moveSpeed;
+	if (keyStates['w']) dy += MOVESPEED;
+	if (keyStates['s']) dy -= MOVESPEED;
+	if (keyStates['a']) dx -= MOVESPEED;
+	if (keyStates['d']) dx += MOVESPEED;
 	
-
 	// Normalize diagonal movement
 	if (dx != 0.0f && dy != 0.0f) {
 		dx *= 0.7071f;  // sqrt(2)/2 to make diagonal speed same as cardinal directions
 		dy *= 0.7071f;
 	}
+	
+	float newX = Player.getX() + dx;
+	float newY = Player.getY() + dy;
 
-	Player.move(dx, dy);
+	// Ensure the player does not move outside the screen boundaries
+	if (newX - PLAYERSIZE / 2.0f >= -1.0f && newX + PLAYERSIZE / 2.0f <= 1.0f)
+		Player.setX(newX);
+	if (newY - PLAYERSIZE / 2.0f >= -1.0f && newY + PLAYERSIZE / 2.0f <= 1.0f)
+		Player.setY(newY);
 
-	glutTimerFunc(updateInterval, update, 0);
+	glutTimerFunc(UPDATEINTERVAL, update, 0);
 	glutPostRedisplay();
 
 }
@@ -104,17 +112,17 @@ int main( int argc, char** argv )
 	glutInit( &argc, argv );
 
 	glutInitWindowPosition( 100, 100 );
-	glutInitWindowSize( 800, 600 );
+	glutInitWindowSize( 800, 800);
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
 	glutCreateWindow( "Basic OpenGL Example" );
-	glutFullScreen();
 
 	glutDisplayFunc( display_func );
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc( keyboard_func );
 	glutKeyboardUpFunc(keyboardUp);
 	glutTimerFunc(0, update, 0);
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
 	init();
 
 	glutMainLoop();

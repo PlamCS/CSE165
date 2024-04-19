@@ -1,4 +1,5 @@
 ﻿  Entity.cpp
+  Entity.h
   main.cpp
   Generating Code...
   BasicOpenGLProject.vcxproj -> C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\x64\Debug\BasicOpenGLProject.exe
