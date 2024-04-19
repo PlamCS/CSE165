@@ -1,5 +1,7 @@
 #include <GL/freeglut.h>
 #include <iostream>
+#include "Map.h"
+#include "Entity.h"
 
 //=================================================================================================
 // CALLBACKS
@@ -11,75 +13,23 @@
 // http://freeglut.sourceforge.net/docs/api.php#WindowCallback
 //-----------------------------------------------------------------------------
 
-void idle_func()
-{
-	//uncomment below to repeatedly draw new frames
-	//glutPostRedisplay();
-}
-
-void reshape_func( int width, int height )
-{
-	glViewport( 0, 0, width, height );
-	glutPostRedisplay();
-}
+const float moveSpeed = 0.020f;
+const int updateInterval = 16;
+bool* keyStates = new bool[256];
+Map map = Map();
+Entity Player = Entity();
 
 void keyboard_func( unsigned char key, int x, int y )
 {
-	switch( key )
-	{
-		case 'w':
-		{
-			break;
-		}
-
-		case 'a':
-		{
-			break;
-		}
-
-		case 's':
-		{
-			break;
-		}
-
-		case 'd':
-		{
-			break;
-		}
-
-		// Exit on escape key press
-		case '\x1B':
-		{
-			exit( EXIT_SUCCESS );
-			break;
-		}
+	if (key == '\x1B') {
+		exit(EXIT_SUCCESS);
 	}
-
+	keyStates[key] = true;
 	glutPostRedisplay();
 }
 
-void key_released( unsigned char key, int x, int y )
-{
-}
-
-void key_special_pressed( int key, int x, int y )
-{
-}
-
-void key_special_released( int key, int x, int y )
-{
-}
-
-void mouse_func( int button, int state, int x, int y )
-{
-}
-
-void passive_motion_func( int x, int y )
-{
-}
-
-void active_motion_func( int x, int y )
-{
+void keyboardUp(unsigned char key, int x, int y) {
+	keyStates[key] = false;
 }
 
 //=================================================================================================
@@ -90,27 +40,42 @@ void display_func( void )
 {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	glBegin( GL_LINES );
-		glColor3f( 1.0f, 0.0f, 0.0f );
-		glVertex2f( -0.5f, 0.0f );
-		glColor3f( 0.0f, 1.0f, 0.0f );
-		glVertex2f( 0.5f, 0.0f );
-	glEnd();
-
-	glColor3f( 0.0f, 0.0f, 1.0f );
-	glBegin( GL_LINES );
-		glVertex2f( 0.0f, -0.5f );
-		glVertex2f( 0.0f, 0.5f );
-	glEnd();
-
-	glColor3f( 1.0f, 1.0f, 1.0f );
-	glBegin( GL_TRIANGLES );
-		glVertex2f( 0.1f, 0.1f );
-		glVertex2f( 0.4f, 0.1f );
-		glVertex2f( 0.25f, 0.4f );
-	glEnd();
+	map.draw();
+	Player.draw();
 
 	glutSwapBuffers();
+}
+
+void update(int value) {
+
+	float dx = 0.0f;
+	float dy = 0.0f;
+
+	if (keyStates['w']) dy += moveSpeed;
+	if (keyStates['s']) dy -= moveSpeed;
+	if (keyStates['a']) dx -= moveSpeed;
+	if (keyStates['d']) dx += moveSpeed;
+	
+
+	// Normalize diagonal movement
+	if (dx != 0.0f && dy != 0.0f) {
+		dx *= 0.7071f;  // sqrt(2)/2 to make diagonal speed same as cardinal directions
+		dy *= 0.7071f;
+	}
+
+	Player.move(dx, dy);
+
+	glutTimerFunc(updateInterval, update, 0);
+	glutPostRedisplay();
+
+}
+
+void reshape(int w, int h) {
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
+	glMatrixMode(GL_MODELVIEW);
 }
 
 //=================================================================================================
@@ -143,18 +108,13 @@ int main( int argc, char** argv )
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
 	glutCreateWindow( "Basic OpenGL Example" );
+	glutFullScreen();
 
 	glutDisplayFunc( display_func );
-	glutIdleFunc( idle_func );
-	glutReshapeFunc( reshape_func );
+	glutReshapeFunc(reshape);
 	glutKeyboardFunc( keyboard_func );
-	glutKeyboardUpFunc( key_released );
-	glutSpecialFunc( key_special_pressed );
-	glutSpecialUpFunc( key_special_released );
-	glutMouseFunc( mouse_func );
-	glutMotionFunc( active_motion_func );
-	glutPassiveMotionFunc( passive_motion_func );
-
+	glutKeyboardUpFunc(keyboardUp);
+	glutTimerFunc(0, update, 0);
 	init();
 
 	glutMainLoop();
