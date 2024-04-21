@@ -1,32 +1,12 @@
 #include "Entity.h"
 #include<iostream>
 
-Entity::Entity(float x, float y, float size)
-{
-    Entity::x = x;
-    Entity::y = y;
-    Entity::size = size;
-}
-
-float Entity::getX()
-{
-    return Entity::x;
-}
-
-float Entity::getY()
-{
-    return Entity::y;
-}
-
-void Entity::setX(float value)
-{
-    Entity::x = value;
-}
-
-void Entity::setY(float value)
-{
-    Entity::y = value;
-}
+//Entity::Entity(float x, float y, float size)
+//{
+//    Entity::x = x;
+//    Entity::y = y;
+//    Entity::size = size;
+//}
 
 void Entity::draw()
 {
@@ -48,11 +28,5 @@ void Entity::draw()
     glVertex2f(-1.0f, Entity::y);
     glVertex2f(1.0f, Entity::y);
     glEnd();
-
-    //glColor3f(0.0f, 1.0f, 1.0f);
-    //glBegin(GL_LINES);
-    //glVertex2f(Entity::x, Entity::x);
-    //glVertex2f(Entity::y, Entity::y);
-    //glEnd();
 
 }

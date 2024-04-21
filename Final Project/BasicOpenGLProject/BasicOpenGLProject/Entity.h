@@ -5,16 +5,17 @@ using namespace std;
 
 class Entity
 {
+protected:
 	float size;
-public:
 	float x;
 	float y;
-	Entity(float x, float y, float size);
-	
-	float getX();
-	float getY();
-	void setX(float value);
-	void setY(float value);
+public:
+	Entity(float x, float y, float size) : x(x), y(y), size(size) {};
+
+	float getX() const { return Entity::x; };
+	float getY() const { return Entity::y; };
+	void setX(float value) { Entity::x = value; };
+	void setY(float value) { Entity::y = value; };
 
 	void draw();
 
