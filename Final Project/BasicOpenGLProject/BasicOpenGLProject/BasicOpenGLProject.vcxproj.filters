@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Object.cpp">
+    <ClCompile Include="Objects.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
     <ClCompile Include="Entity.h">
@@ -27,9 +27,15 @@
     <ClCompile Include="Entity.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="Rooms.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Object.h">
+    <ClInclude Include="Objects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Rooms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

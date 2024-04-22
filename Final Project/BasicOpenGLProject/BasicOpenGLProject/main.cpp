@@ -1,8 +1,11 @@
 #include <GL/freeglut.h>
 #include <iostream>
-#include "Object.h"
+#include "Objects.h"
 #include "Entity.h"
+#include "Rooms.h"
 #include <vector>
+#include <stack>
+#include <deque>
 
 //=================================================================================================
 // CALLBACKS
@@ -17,13 +20,12 @@
 extern const float MOVESPEED = 0.02f;
 const int UPDATEINTERVAL = 16;
 const float PLAYERSIZE = 0.1f;
+int counter = 0;
 
 bool* keyStates = new bool[256];
-Entity Player = Entity(0.0f, 0.0f, PLAYERSIZE);
-std::vector<Object> objects;
 
 
-void keyboard_func( unsigned char key, int x, int y )
+void keyboardDown( unsigned char key, int x, int y )
 {
 	if (key == '\x1B') {
 		exit(EXIT_SUCCESS);
@@ -36,28 +38,23 @@ void keyboardUp(unsigned char key, int x, int y) {
 	keyStates[key] = false;
 }
 
+
 //=================================================================================================
 // RENDERING
 //=================================================================================================
 
+Entity Player = Entity(0.0f, 0.0f, PLAYERSIZE, PLAYERSIZE);
+Room* currentRoom = new BeginningRoom();
+
 void display_func( void )
 {
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+	currentRoom->draw();
+
+	glColor3f(0.0f, 1.0f, 0.0f);
 	Player.draw();
-	
-	Object TopWall = Object(0.0f, 1.0f, PLAYERSIZE, 2.0f, 0.2f);
-	Object BottomWall = Object(0.0f, -1.0f, PLAYERSIZE, 2.0f, 0.2f);
-	Object LeftWall = Object(-1.0f, 0.0f, PLAYERSIZE, 0.2f, 2.0f);
-	Object RightWall = Object(1.0f, 0.0f, PLAYERSIZE, 0.2f, 2.0f);
-	objects.push_back(TopWall);
-	objects.push_back(BottomWall);
-	objects.push_back(LeftWall);
-	objects.push_back(RightWall);
-
-	for (auto& object : objects) {
-		object.draw();
-	}
 
 	glutSwapBuffers();
 }
@@ -83,30 +80,16 @@ void update(int value) {
 	bool collisionX = false;
 	bool collisionY = false;
 
+	if (!currentRoom->check(newX, Player.getY(), Player)) Player.setX(newX);
+	else collisionX = true;
 
-	for (const auto& object : objects) {
-		float objectLeft = object.getX() - object.getWidth() / 2.0f;
-		float objectRight = object.getX() + object.getWidth() / 2.0f;
-		float objectTop = object.getY() + object.getHeight() / 2.0f;
-		float objectBottom = object.getY() - object.getHeight() / 2.0f;
+	if (!currentRoom->check(Player.getX(), newY, Player)) Player.setY(newY);
+	else collisionY = true;
 
-		if (newX + PLAYERSIZE / 2.0f >= objectLeft && newX - PLAYERSIZE / 2.0f <= objectRight &&
-			Player.getY() + PLAYERSIZE / 2.0f >= objectBottom && Player.getY() - PLAYERSIZE / 2.0f <= objectTop) {
-			// Collision detected along X-axis
-			collisionX = true;
-		}
-
-		if (newY + PLAYERSIZE / 2.0f >= objectBottom && newY - PLAYERSIZE / 2.0f <= objectTop &&
-			Player.getX() + PLAYERSIZE / 2.0f >= objectLeft && Player.getX() - PLAYERSIZE / 2.0f <= objectRight) {
-			// Collision detected along Y-axis
-			collisionY = true;
-		}
+	if (collisionX && collisionY) {
+		Player.setX(Player.getX());
+		Player.setY(Player.getY());
 	}
-
-	if (!collisionX && newX - PLAYERSIZE / 2.0f >= -1.0f && newX + PLAYERSIZE / 2.0f <= 1.0f)
-		Player.setX(newX);
-	if (!collisionY && newY - PLAYERSIZE / 2.0f >= -1.0f && newY + PLAYERSIZE / 2.0f <= 1.0f)
-		Player.setY(newY);
 
 	glutTimerFunc(UPDATEINTERVAL, update, 0);
 	glutPostRedisplay();
@@ -154,7 +137,7 @@ int main( int argc, char** argv )
 
 	glutDisplayFunc( display_func );
 	glutReshapeFunc(reshape);
-	glutKeyboardFunc( keyboard_func );
+	glutKeyboardFunc( keyboardDown );
 	glutKeyboardUpFunc(keyboardUp);
 	glutTimerFunc(0, update, 0);
 	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);

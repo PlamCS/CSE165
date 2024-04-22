@@ -138,10 +138,12 @@
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Entity.h" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Objects.cpp" />
+    <ClCompile Include="Rooms.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Object.h" />
+    <ClInclude Include="Objects.h" />
+    <ClInclude Include="Rooms.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
