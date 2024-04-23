@@ -17,19 +17,32 @@ protected:
 	//Door* SouthDoor = new Door(0.0f, -0.98f, 0.2f, 0.2f, false);
 	//Door* EastDoor = new Door(0.98f, 0.0f, 0.2f, 0.2f, false);
 	//Door* WestDoor = new Door(-0.98f, 0.0f, 0.2f, 0.2f, false);
-	std::vector<Door> doors = {Door(0.0f, 0.98f, 0.2f, 0.2f, false),
-								Door(0.0f, -0.98f, 0.2f, 0.2f, false),
-								Door(0.98f, 0.0f, 0.2f, 0.2f, false),
-								Door(-0.98f, 0.0f, 0.2f, 0.2f, false) };
-	std::map<Door*, Room*> roomMemory;
+	std::vector<Door*> doors = {new Door(0.0f, 0.98f, 0.2f, 0.2f, false),
+								new Door(0.0f, -0.98f, 0.2f, 0.2f, false),
+								new Door(0.98f, 0.0f, 0.2f, 0.2f, false),
+								new Door(-0.98f, 0.0f, 0.2f, 0.2f, false) };
+	std::map<int, Room*> roomMemory;
 
 public:
-	std::vector<Door> getDoors() { return Room::doors; };
+	std::vector<Door*> getDoors() { return Room::doors; };
 
-	void addRoomMemory(Door* door, Room* room);
-	Room* getRoomMemory(Door* door);
+	void addRoomMemory(int door, Room* room);
+	Room* getRoomMemory(int door);
 
-	virtual void draw();
-	virtual bool check(float newX, float newY, Entity& Player);
+	void draw();
+	bool check(float newX, float newY, Entity& Player);
 };
 
+class TierOneShortWallRoom :
+	public Room 
+{
+public:
+	TierOneShortWallRoom();
+};
+
+class TierOneLongWallRoom :
+	public Room
+{
+public:
+	TierOneLongWallRoom();
+};
