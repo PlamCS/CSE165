@@ -1,3 +1,33 @@
-﻿  main.cpp
-x64\Debug\Entity.obj : warning LNK4042: object specified more than once; extras ignored
-  BasicOpenGLProject.vcxproj -> C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\x64\Debug\BasicOpenGLProject.exe
+﻿  Entity.h
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(11,14): error C2065: 'Wall': undeclared identifier
+  (compiling source file 'Entity.h')
+  
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(11,7): error C2923: 'std::vector': 'Wall' is not a valid template type argument for parameter '_Ty'
+  (compiling source file 'Entity.h')
+  C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(11,14):
+  see declaration of 'Wall'
+  
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(11,7): error C2976: 'std::vector': too few template arguments
+  (compiling source file 'Entity.h')
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\vector(436,7):
+  see declaration of 'std::vector'
+  
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(19,14): error C2065: 'Door': undeclared identifier
+  (compiling source file 'Entity.h')
+  
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(19,7): error C2923: 'std::vector': 'Door' is not a valid template type argument for parameter '_Ty'
+  (compiling source file 'Entity.h')
+  C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(19,14):
+  see declaration of 'Door'
+  
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(19,7): error C2976: 'std::vector': too few template arguments
+  (compiling source file 'Entity.h')
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\vector(436,7):
+  see declaration of 'std::vector'
+  
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.h(25,45): error C2061: syntax error: identifier 'Entity'
+  (compiling source file 'Entity.h')
+  
+  RoomManager.cpp
+  Rooms.cpp
+  Generating Code...

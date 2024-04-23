@@ -1,5 +1,5 @@
 #include "Entity.h"
-#include<iostream>
+#include <iostream>
 
 void Entity::draw()
 {
@@ -9,5 +9,5 @@ void Entity::draw()
     glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
     glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
     glEnd();
-
 }
+

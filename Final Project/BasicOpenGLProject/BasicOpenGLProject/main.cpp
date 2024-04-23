@@ -1,11 +1,9 @@
 #include <GL/freeglut.h>
 #include <iostream>
-#include "Objects.h"
 #include "Entity.h"
 #include "Rooms.h"
+#include "RoomManager.h"
 #include <vector>
-#include <stack>
-#include <deque>
 
 //=================================================================================================
 // CALLBACKS
@@ -43,18 +41,19 @@ void keyboardUp(unsigned char key, int x, int y) {
 // RENDERING
 //=================================================================================================
 
-Entity Player = Entity(0.0f, 0.0f, PLAYERSIZE, PLAYERSIZE);
-Room* currentRoom = new BeginningRoom();
+Player player = Player(0.0f, 0.0f, PLAYERSIZE, PLAYERSIZE);
+RoomManager map = RoomManager();
 
 void display_func( void )
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	//std::cout << "Drawing Map: " << std::endl;
+	map.draw();
 
-	currentRoom->draw();
-
+	//std::cout << "Drawing Player: " << std::endl;
 	glColor3f(0.0f, 1.0f, 0.0f);
-	Player.draw();
+	player.draw();
 
 	glutSwapBuffers();
 }
@@ -75,20 +74,20 @@ void update(int value) {
 		dy *= 0.7071f;
 	}
 	
-	float newX = Player.getX() + dx;
-	float newY = Player.getY() + dy;
+	float newX = player.getX() + dx;
+	float newY = player.getY() + dy;
 	bool collisionX = false;
 	bool collisionY = false;
 
-	if (!currentRoom->check(newX, Player.getY(), Player)) Player.setX(newX);
+	if (!map.check(newX, player.getY(), player)) player.setX(newX);
 	else collisionX = true;
 
-	if (!currentRoom->check(Player.getX(), newY, Player)) Player.setY(newY);
+	if (!map.check(player.getX(), newY, player)) player.setY(newY);
 	else collisionY = true;
 
 	if (collisionX && collisionY) {
-		Player.setX(Player.getX());
-		Player.setY(Player.getY());
+		player.setX(player.getX());
+		player.setY(player.getY());
 	}
 
 	glutTimerFunc(UPDATEINTERVAL, update, 0);
