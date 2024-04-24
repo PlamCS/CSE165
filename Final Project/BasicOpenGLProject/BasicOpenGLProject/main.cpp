@@ -4,6 +4,7 @@
 #include "Rooms.h"
 #include "RoomManager.h"
 #include <vector>
+#include <sstream>
 
 //=================================================================================================
 // CALLBACKS
@@ -18,10 +19,10 @@
 extern const float MOVESPEED = 0.02f;
 const int UPDATEINTERVAL = 16;
 const float PLAYERSIZE = 0.1f;
-int counter = 0;
+int SCREENWIDTH = 900;
+int SCREENHEIGHT = 900;
 
 bool* keyStates = new bool[256];
-
 
 void keyboardDown( unsigned char key, int x, int y )
 {
@@ -48,12 +49,34 @@ void display_func( void )
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//std::cout << "Drawing Map: " << std::endl;
 	map.draw();
 
-	//std::cout << "Drawing Player: " << std::endl;
 	glColor3f(0.0f, 1.0f, 0.0f);
 	player.draw();
+
+	// Convert score to a string using stringstream
+	std::stringstream ss;
+	ss << "Score: " << RoomManager::score;
+	std::string scoreString = ss.str();
+
+	// Set the text color (white for example)
+	glColor3f(1.0f, 1.0f, 1.0f);
+	// Set the projection matrix for text rendering (assuming orthographic projection)
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-1.0f, 1.0f, -1.0f, 1.0f); // Match the window coordinate system
+
+	// Switch to modelview matrix for text positioning
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	// Move the text to the top right corner
+	glRasterPos2f(0.8f, 0.96f);
+
+	// Render the score string using OpenGL functions
+	for (const char& character : scoreString) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, character); // Use a built-in font
+	}
 
 	glutSwapBuffers();
 }
@@ -76,6 +99,7 @@ void update(int value) {
 	
 	float newX = player.getX() + dx;
 	float newY = player.getY() + dy;
+
 	bool collisionX = false;
 	bool collisionY = false;
 
@@ -129,7 +153,7 @@ int main( int argc, char** argv )
 	glutInit( &argc, argv );
 
 	glutInitWindowPosition( 100, 100 );
-	glutInitWindowSize( 800, 800);
+	glutInitWindowSize(SCREENWIDTH, SCREENHEIGHT);
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
 	glutCreateWindow( "Basic OpenGL Example" );
