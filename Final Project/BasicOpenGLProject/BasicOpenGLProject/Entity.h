@@ -8,7 +8,7 @@ class Entity
 protected:
 	float x, y, width, height;
 public:
-	Entity(float x, float y, float width, float height) : x(x), y(y), width(width), height(height){};
+	Entity(float x, float y, float width, float height) : x(x), y(y), width(width), height(height) {};
 	
 	float getX() const { return Entity::x; };
 	float getY() const { return Entity::y; };
@@ -28,12 +28,16 @@ class Door :
 	public Entity
 {
 protected:
+	int tier;
 	bool visited;
 public:
-	Door(float x, float y, float width, float height, bool status) : Entity(x, y, width, height), visited(status) {}
+	Door(float x, float y, float width, float height, bool status) : Entity(x, y, width, height), visited(status), tier(0) {};
+	
 	void Visited() { Door::visited = true; };
 	void Unvisited() { Door::visited = false; };
 	bool isVisited() const { return Door::visited; };
+	int Tier() { return Door::tier; };
+	void setTier(int value) { Door::tier = value; };
 };
 
 class SpikeTrap : public Entity {
@@ -47,12 +51,14 @@ public:
 	void draw() override;
 };
 
-class Wall : public Entity{
+class Wall : 
+	public Entity{
 public:
 	Wall(float x, float y, float width, float height) : Entity(x, y, width, height) {};
 };
 
-class LWall : public Entity {
+class LWall : 
+	public Entity {
 protected:
 	Entity* Wall1;
 	Entity* Wall2;
@@ -61,7 +67,7 @@ public:
 	LWall(float x, float y, float width, float height, int rotation);
 	void draw() override;
 	bool check(float pointX, float pointY, Entity* object) override;
-
+	~LWall();
 };
 
 class Player :

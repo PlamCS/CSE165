@@ -24,9 +24,24 @@ void Room::draw()
 		object->draw();
 	}
 	for (auto& door : doors) {
-        glColor3f(0.5f, 0.25f, 0.0f);
-        if (Room::getRoomMemory(Room::getDoor(door))) glColor3f(0.231f, 0.231f, 0.231f);
+        
+        int value = door->Tier();
+        if (!door->Tier()) {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<int> dist(0, 100);
+            value = dist(gen);
+            door->setTier(value);
+        }
+
+        if (!door->Tier()) break;
+        else if (Room::getRoomMemory(Room::getDoor(door))) glColor3f(0.231f, 0.231f, 0.231f);
+        else if (value <= 3 && RoomManager::score >= 200) glColor3f(0.859f, 0.0f, 0.0f);
+        else if (value <= 10 && RoomManager::score >= 100) glColor3f(0.502f, 0.0f, 1.0f);
+        else if (value <= 30 && RoomManager::score >= 50) glColor3f(1.0f, 0.463f, 0.0f);
+        else if (value <= 100) glColor3f(0.5f, 0.25f, 0.0f);
         door->draw();
+        
 	}
 }
 
@@ -76,15 +91,21 @@ bool Room::check(float newX, float newY, Entity& Player)
 
             if (!RoomManager::currentRoom->getRoomMemory(enteringDoor)) {
                 std::cout << "New Room" << std::endl;
-                RoomManager::score+=10;
+                int doorTier = door->Tier();
                 
-                
-                int randomNumber = generateRandomNumber(0,20);
+                // Handles New Room Creation (What Kind of Room)
+                int roomNumber = 0;
+                if (doorTier <= 3 && RoomManager::score >= 200) roomNumber = generateRandomNumber(12, 15);
+                else if (doorTier <= 10 && RoomManager::score >= 100) roomNumber = generateRandomNumber(8, 11);
+                else if (doorTier <= 30 && RoomManager::score >= 50) roomNumber = generateRandomNumber(4, 7);
+                else if (doorTier <= 100) { roomNumber = generateRandomNumber(0, 3); RoomManager::score += 10; };
 
-                // Handles New Room Creation
-                Room* nextRoom = new TierOneShortWallRoom();
-                //if( randomNumber < 10 ) nextRoom = new TierOneLongWallRoom();
-                //else if ( randomNumber >= 10 ) nextRoom = new TierOneShortWallRoom();
+                std::vector<Room*> rooms = {new LWallRoom(), new InvertedLWallRoom(), new WallRoom(), new InvertWallRoom() };
+
+                Room* nextRoom = rooms[roomNumber];
+                for (auto& room : rooms) {
+                    if (room != nextRoom) delete room;
+                }
                 //RoomManager::enemies = generateRandomNumber(2, 5);
 
                 RoomManager::currentRoom->addRoomMemory(enteringDoor, nextRoom);
@@ -106,32 +127,68 @@ bool Room::check(float newX, float newY, Entity& Player)
     return false;
 }
 
-TierOneShortWallRoom::TierOneShortWallRoom() {
-    float width = 0.3f;
-    float height = 0.05f;
+Room::~Room()
+{
+    for (auto& object : Room::objects) {
+        delete object;
+    }
 
-    int randomNumber = generateRandomNumber(0, 1);
-    if (randomNumber == 1) {
-        objects.push_back(new SpikeTrap(0.3f, 0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(300, 600))));
-        objects.push_back(new SpikeTrap(0.3f, -0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(300, 600))));
-        objects.push_back(new SpikeTrap(-0.3f, -0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(300, 600))));
-        objects.push_back(new SpikeTrap(-0.3f, 0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(300, 600))));
-        Room::objects.push_back(new LWall(0.4f, 0.4f, width, height, 0));
-        Room::objects.push_back(new LWall(0.4f, -0.4f, width, height, 90));
-        Room::objects.push_back(new LWall(-0.4f, -0.4f, width, height, 180));
-        Room::objects.push_back(new LWall(-0.4f, 0.4f, width, height, 270));
-    }else {
-        objects.push_back(new SpikeTrap(0.5f, 0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(300, 600))));
-        objects.push_back(new SpikeTrap(0.5f, -0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(300, 600))));
-        objects.push_back(new SpikeTrap(-0.5f, -0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(300, 600))));
-        objects.push_back(new SpikeTrap(-0.5f, 0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(300, 600))));
-        Room::objects.push_back(new LWall(0.4f, 0.4f, width, height, 180));
-        Room::objects.push_back(new LWall(0.4f, -0.4f, width, height, 270));
-        Room::objects.push_back(new LWall(-0.4f, -0.4f, width, height, 0));
-        Room::objects.push_back(new LWall(-0.4f, 0.4f, width, height, 90));
+    for (auto& door : Room::doors) {
+        delete door;
+    }
+
+    for (auto &it : Room::roomMemory) {
+        delete it.second;
     }
 }
 
-TierOneLongWallRoom::TierOneLongWallRoom() {
+LWallRoom::LWallRoom() {
+    float width = 0.3f;
+    float height = 0.05f;
+
+    objects.push_back(new SpikeTrap(0.3f, 0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
+    objects.push_back(new SpikeTrap(0.3f, -0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
+    objects.push_back(new SpikeTrap(-0.3f, -0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
+    objects.push_back(new SpikeTrap(-0.3f, 0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
+    Room::objects.push_back(new LWall(0.4f, 0.4f, width, height, 0));
+    Room::objects.push_back(new LWall(0.4f, -0.4f, width, height, 90));
+    Room::objects.push_back(new LWall(-0.4f, -0.4f, width, height, 180));
+    Room::objects.push_back(new LWall(-0.4f, 0.4f, width, height, 270));
     
+}
+
+InvertedLWallRoom::InvertedLWallRoom()
+{
+    float width = 0.3f;
+    float height = 0.05f;
+    objects.push_back(new SpikeTrap(0.5f, 0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
+    objects.push_back(new SpikeTrap(0.5f, -0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
+    objects.push_back(new SpikeTrap(-0.5f, -0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
+    objects.push_back(new SpikeTrap(-0.5f, 0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
+    Room::objects.push_back(new LWall(0.4f, 0.4f, width, height, 180));
+    Room::objects.push_back(new LWall(0.4f, -0.4f, width, height, 270));
+    Room::objects.push_back(new LWall(-0.4f, -0.4f, width, height, 0));
+    Room::objects.push_back(new LWall(-0.4f, 0.4f, width, height, 90));
+}
+
+WallRoom::WallRoom()
+{
+    float width = 0.7f;
+    float height = 0.05f;
+    Room::objects.push_back(new Wall(0.6f, 0.6f, width, height));
+    Room::objects.push_back(new Wall(-0.6f, 0.6f, width, height));
+    Room::objects.push_back(new Wall(0.6f, -0.6f, width, height));
+    Room::objects.push_back(new Wall(-0.6f, -0.6f, width, height));
+    Room::objects.push_back(new Wall(0.0f, 0.0f, width, height));
+}
+
+InvertWallRoom::InvertWallRoom()
+{
+    float width = 0.7f;
+    float height = 0.05f;
+    Room::objects.push_back(new Wall(0.6f, 0.6f, height, width));
+    Room::objects.push_back(new Wall(-0.6f, 0.6f, height, width));
+    Room::objects.push_back(new Wall(0.6f, -0.6f, height, width));
+    Room::objects.push_back(new Wall(-0.6f, -0.6f, height, width));
+    Room::objects.push_back(new Wall(0.0f, 0.0f, height, width));
 }

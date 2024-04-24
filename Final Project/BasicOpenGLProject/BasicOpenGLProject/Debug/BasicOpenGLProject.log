@@ -1,7 +1,7 @@
 ﻿  Entity.cpp
   Entity.h
-  RoomManager.cpp
   Rooms.cpp
-  main.cpp
   Generating Code...
-  BasicOpenGLProject.vcxproj -> C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\Debug\BasicOpenGLProject.exe
+Debug\Entity.obj : warning LNK4042: object specified more than once; extras ignored
+Rooms.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall Door::draw(void)" (?draw@Door@@UAEXXZ)
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\Debug\BasicOpenGLProject.exe : fatal error LNK1120: 1 unresolved externals
