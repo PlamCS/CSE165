@@ -23,7 +23,8 @@ public:
 	void setHeight(float value) { Entity::height = value; };
 
 	virtual void draw();
-	virtual bool check(float pointX, float pointY, Entity* object);
+	virtual bool check(float dx, float dy, Entity* object);
+	virtual void move(float dx, float dy);
 };
 
 class Door :
@@ -38,7 +39,7 @@ public:
 	void Visited() { Door::visited = true; };
 	void Unvisited() { Door::visited = false; };
 	bool isVisited() const { return Door::visited; };
-	int Tier() { return Door::tier; };
+	int Tier() const { return Door::tier; };
 	void setTier(int value) { Door::tier = value; };
 };
 
@@ -51,6 +52,11 @@ public:
 	bool check(float pointX, float pointY, Entity* object) override;
 	void Activate();
 	void draw() override;
+};
+
+class SlowTrap : public Entity {
+public:
+	SlowTrap(float x, float y, float width, float height) : Entity(x, y, width, height) {};
 };
 
 class Wall : 
@@ -69,7 +75,6 @@ public:
 	LWall(float x, float y, float width, float height, int rotation);
 	void draw() override;
 	bool check(float pointX, float pointY, Entity* object) override;
-	~LWall();
 };
 
 class Player :
@@ -86,15 +91,15 @@ protected:
 	float speed;
 	float initial_dx;
 	float initial_dy;
-	
+
 public:
-	Projectile(float x, float y, float width, float height, float speed, Entity* target) : Entity(x, y, width, height), speed(speed){
+	Projectile(float x, float y, float width, float height, float speed, Entity* target) : Entity(x, y, width, height), speed(speed) {
 		float dx = target->getX() - x;
 		float dy = target->getY() - y;
-		
+
 		float magnitude = std::sqrt(dx * dx + dy * dy);
 
-		if (magnitude != 0) { 
+		if (magnitude != 0) {
 			initial_dx = dx / magnitude;
 			initial_dy = dy / magnitude;
 		}
@@ -102,24 +107,27 @@ public:
 			initial_dx = 0;
 			initial_dy = 1;
 		}
-	
 	}
 	void move() {
 		setX(getX() + speed * initial_dx);
 		setY(getY() + speed * initial_dy);
 	}
+	//bool check(float dx, float dy, Entity* object) override;
 };
 
-class Enemy : public Entity{
+class Enemy : public Entity {
 protected:
-	std::vector<Projectile*> projectiles;
 	int counter;
+	std::vector<Projectile*> projectiles;
 public:
-	Enemy(float x, float y, float width, float height) : Entity(x, y, width, height), counter(0){}
+	Enemy(float x, float y, float width, float height) : Entity(x, y, width, height), counter(0) {};
+	//std::vector<Projectile*> getProjectiles() { return Enemy::projectiles; };
+
+
+
 	void draw() override;
 	bool check(float pointX, float pointY, Entity* object) override;
-	bool checkProjectile();
 	//Projectile* shoot(const Player& player) {
-	//	return new Projectile(getX(), getY(), 0.05f, 0.05f, 0.01f, player);
+	//    return new Projectile(getX(), getY(), 0.05f, 0.05f, 0.01f, player);
 	//}
 };

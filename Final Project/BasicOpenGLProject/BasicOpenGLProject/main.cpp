@@ -1,9 +1,6 @@
 #include <GL/freeglut.h>
 #include <iostream>
-#include "Entity.h"
-#include "Rooms.h"
 #include "RoomManager.h"
-#include <vector>
 #include <sstream>
 
 //=================================================================================================
@@ -16,9 +13,8 @@
 // http://freeglut.sourceforge.net/docs/api.php#WindowCallback
 //-----------------------------------------------------------------------------
 
-extern const float MOVESPEED = 0.02f;
+const float MOVESPEED = 0.02f;
 const int UPDATEINTERVAL = 16;
-const float PLAYERSIZE = 0.1f;
 int SCREENWIDTH = 900;
 int SCREENHEIGHT = 900;
 
@@ -37,16 +33,10 @@ void keyboardUp(unsigned char key, int x, int y) {
 	keyStates[key] = false;
 }
 
-
 //=================================================================================================
 // RENDERING
 //=================================================================================================
-
-Player player = Player(0.0f, 0.0f, PLAYERSIZE, PLAYERSIZE);
 RoomManager map = RoomManager();
-Enemy enemyOne = Enemy(0.0f, 0.0f, 0.2f, 0.2f);
-Entity* dummy = new Wall(0.4f, 0.4f, 0.1f, 0.1f);
-
 
 void display_func( void )
 {
@@ -54,11 +44,6 @@ void display_func( void )
 
 	map.draw();
 
-	glColor3f(0.0f, 1.0f, 0.0f);
-	player.draw();
-	glColor3f(1.0f, 0.0f, 0.0f);
-	enemyOne.draw();
-	dummy->draw();
 	// Convert score to a string using stringstream
 	std::stringstream ss;
 	ss << "Score: " << RoomManager::score;
@@ -87,7 +72,6 @@ void display_func( void )
 }
 
 void update(int value) {
-	enemyOne.check(0.0f, 0.0f, dummy);
 	float dx = 0.0f;
 	float dy = 0.0f;
 
@@ -102,22 +86,24 @@ void update(int value) {
 		dy *= 0.7071f;
 	}
 	
-	float newX = player.getX() + dx;
-	float newY = player.getY() + dy;
+	RoomManager::player->move(dx, dy);
 
-	bool collisionX = false;
-	bool collisionY = false;
+	//float newX = player.getX() + dx;
+	//float newY = player.getY() + dy;
 
-	if (!map.check(newX, player.getY(), player)) player.setX(newX);
-	else collisionX = true;
+	//bool collisionX = false;
+	//bool collisionY = false;
 
-	if (!map.check(player.getX(), newY, player)) player.setY(newY);
-	else collisionY = true;
+	//if (!map.check(newX, player.getY(), player)) player.setX(newX);
+	//else collisionX = true;
 
-	if (collisionX && collisionY) {
-		player.setX(player.getX());
-		player.setY(player.getY());
-	}
+	//if (!map.check(player.getX(), newY, player)) player.setY(newY);
+	//else collisionY = true;
+
+	//if (collisionX && collisionY) {
+	//	player.setX(player.getX());
+	//	player.setY(player.getY());
+	//}
 
 	glutTimerFunc(UPDATEINTERVAL, update, 0);
 	glutPostRedisplay();
