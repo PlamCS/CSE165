@@ -106,3 +106,34 @@ void SpikeTrap::draw() {
     glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
     glEnd();
 }
+void Enemy::draw()
+{
+    glBegin(GL_QUADS);
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
+    glEnd();
+    for (auto& projectile : Enemy::projectiles) {
+        glColor3f(1.0f, 0.0f, 0.0f);
+        projectile->draw();
+        projectile->move();
+    }
+}
+
+bool Enemy::check(float pointX, float pointY, Entity* object)
+{
+    Enemy::counter++;
+    std::cout << "Projectile test. The counter is: " << Enemy::counter << std::endl;
+    if (Enemy::counter == 250) {
+        projectiles.push_back(new Projectile(getX(), getY(), 0.05f, 0.05f, 0.01f, object));
+        Enemy::counter = 0;
+    }
+    return false;
+}
+
+bool Enemy::checkProjectile()
+{
+    return false;
+}
+

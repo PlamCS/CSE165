@@ -44,6 +44,9 @@ void keyboardUp(unsigned char key, int x, int y) {
 
 Player player = Player(0.0f, 0.0f, PLAYERSIZE, PLAYERSIZE);
 RoomManager map = RoomManager();
+Enemy enemyOne = Enemy(0.0f, 0.0f, 0.2f, 0.2f);
+Entity* dummy = new Wall(0.4f, 0.4f, 0.1f, 0.1f);
+
 
 void display_func( void )
 {
@@ -53,7 +56,9 @@ void display_func( void )
 
 	glColor3f(0.0f, 1.0f, 0.0f);
 	player.draw();
-
+	glColor3f(1.0f, 0.0f, 0.0f);
+	enemyOne.draw();
+	dummy->draw();
 	// Convert score to a string using stringstream
 	std::stringstream ss;
 	ss << "Score: " << RoomManager::score;
@@ -82,7 +87,7 @@ void display_func( void )
 }
 
 void update(int value) {
-
+	enemyOne.check(0.0f, 0.0f, dummy);
 	float dx = 0.0f;
 	float dy = 0.0f;
 

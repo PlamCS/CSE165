@@ -1,7 +1,14 @@
-﻿  Entity.cpp
-  Entity.h
-  RoomManager.cpp
-  Rooms.cpp
-  main.cpp
-  Generating Code...
-  BasicOpenGLProject.vcxproj -> C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\Debug\BasicOpenGLProject.exe
+﻿  Entity.h
+Debug\Entity.obj : warning LNK4042: object specified more than once; extras ignored
+main.obj : error LNK2019: unresolved external symbol "public: virtual void __thiscall Entity::draw(void)" (?draw@Entity@@UAEXXZ) referenced in function "void __cdecl display_func(void)" (?display_func@@YAXXZ)
+RoomManager.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall Entity::draw(void)" (?draw@Entity@@UAEXXZ)
+Rooms.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall Entity::draw(void)" (?draw@Entity@@UAEXXZ)
+main.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall Entity::check(float,float,class Entity *)" (?check@Entity@@UAE_NMMPAV1@@Z)
+RoomManager.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall Entity::check(float,float,class Entity *)" (?check@Entity@@UAE_NMMPAV1@@Z)
+Rooms.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall Entity::check(float,float,class Entity *)" (?check@Entity@@UAE_NMMPAV1@@Z)
+main.obj : error LNK2019: unresolved external symbol "public: virtual void __thiscall Projectile::draw(void)" (?draw@Projectile@@UAEXXZ) referenced in function "public: void __thiscall Enemy::shoot(class std::vector<class Projectile,class std::allocator<class Projectile> > &)" (?shoot@Enemy@@QAEXAAV?$vector@VProjectile@@V?$allocator@VProjectile@@@std@@@std@@@Z)
+main.obj : error LNK2019: unresolved external symbol "public: virtual void __thiscall Enemy::draw(void)" (?draw@Enemy@@UAEXXZ) referenced in function "void __cdecl display_func(void)" (?display_func@@YAXXZ)
+Rooms.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall SpikeTrap::check(float,float,class Entity *)" (?check@SpikeTrap@@UAE_NMMPAVEntity@@@Z)
+Rooms.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall SpikeTrap::draw(void)" (?draw@SpikeTrap@@UAEXXZ)
+Rooms.obj : error LNK2019: unresolved external symbol "public: __thiscall LWall::LWall(float,float,float,float,int)" (??0LWall@@QAE@MMMMH@Z) referenced in function "public: __thiscall TierOneShortWallRoom::TierOneShortWallRoom(void)" (??0TierOneShortWallRoom@@QAE@XZ)
+C:\BindingOfIssac\Final Project\BasicOpenGLProject\Debug\BasicOpenGLProject.exe : fatal error LNK1120: 7 unresolved externals

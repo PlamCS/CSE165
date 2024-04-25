@@ -2,6 +2,8 @@
 #include <GL/freeglut.h>
 #include <chrono>
 #include <thread>
+#include <vector>
+#include <cmath>
 
 class Entity
 {
@@ -69,4 +71,49 @@ class Player :
 {
 public:
 	Player(float x, float y, float width, float height) : Entity(x, y, width, height) {}
+};
+
+class Projectile :
+	public Entity
+{
+protected:
+	float speed;
+	float initial_dx;
+	float initial_dy;
+	
+public:
+	Projectile(float x, float y, float width, float height, float speed, Entity* target) : Entity(x, y, width, height), speed(speed){
+		float dx = target->getX() - x;
+		float dy = target->getY() - y;
+		
+		float magnitude = std::sqrt(dx * dx + dy * dy);
+
+		if (magnitude != 0) { 
+			initial_dx = dx / magnitude;
+			initial_dy = dy / magnitude;
+		}
+		else {
+			initial_dx = 0;
+			initial_dy = 1;
+		}
+	
+	}
+	void move() {
+		setX(getX() + speed * initial_dx);
+		setY(getY() + speed * initial_dy);
+	}
+};
+
+class Enemy : public Entity{
+protected:
+	std::vector<Projectile*> projectiles;
+	int counter;
+public:
+	Enemy(float x, float y, float width, float height) : Entity(x, y, width, height), counter(0){}
+	void draw() override;
+	bool check(float pointX, float pointY, Entity* object) override;
+	bool checkProjectile();
+	//Projectile* shoot(const Player& player) {
+	//	return new Projectile(getX(), getY(), 0.05f, 0.05f, 0.01f, player);
+	//}
 };
