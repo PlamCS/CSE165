@@ -33,18 +33,35 @@ public:
 
 	void draw();
 	bool check(float newX, float newY, Entity& Player);
+
+	virtual ~Room();
 };
 
-class TierOneShortWallRoom :
+class LWallRoom :
 	public Room 
 {
 public:
-	TierOneShortWallRoom();
+	LWallRoom();
 };
 
-class TierOneLongWallRoom :
+class InvertedLWallRoom :
+	public Room 
+{
+public:
+	InvertedLWallRoom();
+
+};
+
+class WallRoom :
 	public Room
 {
 public:
-	TierOneLongWallRoom();
+	WallRoom();
+};
+
+class InvertWallRoom :
+	public Room
+{
+public:
+	InvertWallRoom();
 };

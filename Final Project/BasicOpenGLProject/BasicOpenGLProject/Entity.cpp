@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include "RoomManager.h"
 #include <iostream>
+#include <random>
 
 void Entity::draw()
 {
@@ -59,6 +60,13 @@ bool LWall::check(float x, float y, Entity* object)
     if (LWall::Wall1->check(x, y, object)) wall1Collision = true;
     if (LWall::Wall2->check(x, y, object)) wall2Collision = true;
     return (wall1Collision || wall2Collision);
+}
+
+LWall::~LWall()
+{
+    delete LWall::Wall1;
+    delete LWall::Wall2;
+    delete this;
 }
 
 bool SpikeTrap::check(float x, float y, Entity* object)
@@ -137,3 +145,4 @@ bool Enemy::checkProjectile()
     return false;
 }
 
+}
