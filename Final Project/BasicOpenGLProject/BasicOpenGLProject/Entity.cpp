@@ -2,6 +2,8 @@
 #include "Entity.h"
 #include "Trap.h"
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <random>
 
 void Entity::draw()
@@ -79,23 +81,58 @@ bool LWall::check(float x, float y, Entity* object)
     return (LWall::Wall1->check(x, y, object) || LWall::Wall2->check(x, y, object));
 }
 
-bool Enemy::check(float pointX, float pointY, Entity* object)
+void Enemy::shoot()
 {
-    Enemy::counter++;
-    if (Enemy::counter == 150) {
-        Projectile* proj = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, 0.002f, object);
-        proj->setSpeed(0.001f);
-        std::cout << "Pushing Projectile" << std::endl;
-        RoomManager::currentRoom->getProjectiles().push_back(proj);
-        Enemy::counter = 0;
-    }
-    return false;
+    isOnCooldown = true;
+    std::thread cooldownThread([this]() {
+        std::this_thread::sleep_for(cooldown);
+        isOnCooldown = false;
+        });
+    cooldownThread.detach();
+    Projectile* proj = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, 0.002f, RoomManager::player);
+    proj->setSpeed(0.001f);
+    std::cout << "Pushing Projectile" << std::endl;
+    RoomManager::currentRoom->getProjectiles().push_back(proj);
 }
 
 void Player::shoot()
 {
-    std::cout << "Shot" << std::endl;
-    Projectile* projectile = new Projectile(Entity::getX(), Entity::getY(), 0.05f, 0.05f, 0.002f, RoomManager::currentRoom->getObjects()[2]);
+    if (isOnCooldown) {
+        return; // Exit the function early if shooting is on cooldown
+    }
+
+    // Set the cooldown flag to true
+    isOnCooldown = true;
+
+    Entity* nearestEnemy = nullptr;
+    float minDistance = std::numeric_limits<float>::max(); // Initialize minDistance to a large value
+
+    for (auto& enemy : RoomManager::currentRoom->getEnemies()) {
+        // Calculate distance between player and enemy using Euclidean distance formula
+        float distance = std::sqrt(std::pow(Entity::getX() - enemy->getX(), 2) + std::pow(Entity::getY() - enemy->getY(), 2));
+
+        // Check if the current enemy is closer than the previous closest enemy
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearestEnemy = enemy;
+        }
+    }
+
+    // If no enemy is found, exit the function
+    if (!nearestEnemy) {
+        return;
+    }
+
+    // Create a thread to delay the next shot
+    std::thread cooldownThread([this]() {
+        std::this_thread::sleep_for(Player::cooldown);
+
+        // Reset the cooldown flag after the cooldown period is over
+        isOnCooldown = false;
+        });
+    cooldownThread.detach();
+
+    Projectile* projectile = new Projectile(Entity::getX(), Entity::getY(), 0.05f, 0.05f, 0.005f, nearestEnemy);
     projectile->setFriendly();
     RoomManager::currentRoom->getProjectiles().push_back(projectile);
 }

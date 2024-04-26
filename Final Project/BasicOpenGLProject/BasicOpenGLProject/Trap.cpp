@@ -1,4 +1,5 @@
 #include "Trap.h"
+#include "Entity.h"
 #include "RoomManager.h"
 
 void SpikeTrap::Activate()
@@ -82,6 +83,45 @@ void StatusTrap::draw()
 {
     if (StatusTrap::statusSpeed < 1.0f) glColor3f(0.0f, 0.0f, 1.0f);
     else if(StatusTrap::statusSpeed > 1.0f) glColor3f(1.0f, 0.5f, 0.0f);
+    glBegin(GL_QUADS);
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
+    glEnd();
+}
+
+void DartTrap::Activate()
+{
+    std::thread activationThread([this]() {
+        std::this_thread::sleep_for(activationDelay);
+        DartTrap::activated = true;
+        });
+    activationThread.detach();
+}
+
+void DartTrap::shoot()
+{
+    if (!isOnCooldown) {
+        Entity pointA = Entity(DartTrap::getHeight(), 0.0, 0.0f, 0.0f);
+        Entity pointB = Entity(DartTrap::getHeight(), DartTrap::getWidth(), 0.0f, 0.0f);
+        Entity pointC = Entity(DartTrap::getHeight(), -DartTrap::getWidth(), 0.0f, 0.0f);
+
+        RoomManager::currentRoom->getProjectiles().push_back(new Projectile(pointA.getX(), pointB.getY(), 0.05f, 0.05f, 0.001f, &pointA) );
+
+        isOnCooldown = true;
+
+        std::thread cooldownThread([this]() {
+            std::this_thread::sleep_for(cooldown);
+            isOnCooldown = false; 
+            });
+        cooldownThread.detach();
+    }
+}
+
+void DartTrap::draw()
+{
+    glColor3f(0.188f, 0.188f, 0.188f);
     glBegin(GL_QUADS);
     glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
     glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right

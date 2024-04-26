@@ -5,7 +5,7 @@
 
 class Room {
 protected:
-	std::vector<Entity*> enemies;
+	std::vector<Enemy*> enemies;
 	std::vector<Entity*> objects;
 	std::vector<Door*> doors;
 	std::vector<Projectile*> projectiles;
@@ -15,6 +15,7 @@ public:
 	std::vector<Door*>& getDoors() { return Room::doors; }
 	std::vector<Entity*>& getObjects() { return Room::objects; }
 	std::vector<Projectile*>& getProjectiles() { return Room::projectiles; }
+	std::vector<Enemy*>& getEnemies() { return Room::enemies; }
 	
 	int getOppositeDoor(Door* door);
 	int getDoor(Door* door);
@@ -60,3 +61,18 @@ class InvertWallRoom :
 public:
 	InvertWallRoom();
 };
+
+class CenterPillarRoom :
+	public Room
+{
+public:
+	CenterPillarRoom();
+};
+
+class FourPillarRoom :
+	public Room
+{
+public:
+	FourPillarRoom();
+};
+

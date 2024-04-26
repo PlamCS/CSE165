@@ -67,8 +67,13 @@ class Player :
 {
 protected:
 	float speed;
+	std::chrono::milliseconds cooldown;
+	bool isOnCooldown;
 public:
-	Player(float x, float y, float width, float height, float speed) : Entity(x, y, width, height), speed(speed) {}
+	Player(float x, float y, float width, float height, float speed) : 
+		Entity(x, y, width, height), speed(speed), 
+		cooldown(std::chrono::milliseconds(2000)), isOnCooldown(false) {}
+	bool isReady() const { return Player::isOnCooldown; };
 	void shoot();
 };
 
@@ -80,9 +85,9 @@ protected:
 	float initial_dx;
 	float initial_dy;
 	bool enemy;
-
+	bool marked;
 public:
-	Projectile(float x, float y, float width, float height, float speed, Entity* target) : Entity(x, y, width, height) , projectileSpeed(speed), enemy(true){
+	Projectile(float x, float y, float width, float height, float speed, Entity* target) : Entity(x, y, width, height) , projectileSpeed(speed), enemy(true), marked(false){
 		float dx = target->getX() - x;
 		float dy = target->getY() - y;
 
@@ -108,11 +113,8 @@ public:
 	}
 };
 
-class Enemy : public Entity {
-protected:
-	int counter;
+class Enemy : public Player {
 public:
-	Enemy(float x, float y, float width, float height) : Entity(x, y, width, height), counter(0) {};
-
-	bool check(float pointX, float pointY, Entity* object) override;
+	Enemy(float x, float y, float width, float height) : Player(x, y, width, height, 0.02f) {};
+	void shoot();
 };

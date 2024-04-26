@@ -20,12 +20,18 @@ int SCREENHEIGHT = 900;
 
 bool* keyStates = new bool[256];
 
+void initallizeKeys() {
+	for (int i = 0; i < 256; ++i) {
+		keyStates[i] = false;
+	}
+}
+
 void keyboardDown( unsigned char key, int x, int y )
 {
 	if (key == '\x1B') {
 		exit(EXIT_SUCCESS);
 	}
-	keyStates[key] = !keyStates[key];
+	keyStates[key] = true;
 	glutPostRedisplay();
 }
 
@@ -79,7 +85,9 @@ void update(int value) {
 	if (keyStates['s']) dy -= MOVESPEED;
 	if (keyStates['a']) dx -= MOVESPEED;
 	if (keyStates['d']) dx += MOVESPEED;
+
 	if (keyStates[' ']) RoomManager::player->shoot();
+	
 	// Normalize diagonal movement
 	if (dx != 0.0f && dy != 0.0f) {
 		dx *= 0.7071f;  // sqrt(2)/2 to make diagonal speed same as cardinal directions
@@ -141,6 +149,7 @@ void init( void )
 
 int main( int argc, char** argv )
 {
+	initallizeKeys();
 	glutInit( &argc, argv );
 
 	glutInitWindowPosition( 100, 100 );

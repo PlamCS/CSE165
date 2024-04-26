@@ -54,8 +54,9 @@ void Room::draw()
         enemy->draw();
     }
 
-    glColor3f(1.0f, 0.5f, 0.0f);
     for (auto& projectile : Room::projectiles) {
+        if (!projectile->Friendly()) glColor3f(0.0f, 0.5f, 1.0f);
+        else glColor3f(1.0f, 0.5f, 0.0f);
         projectile->draw();
     }
 
@@ -119,28 +120,46 @@ int Room::getDoor(Door * door) {
 
 bool Room::check(float newX, float newY, Entity* entity)
 {
-    
     for (auto& object : objects) {
         if (object->check(newX, newY, entity)) return true;
     }
     
     for (int index = 0; index < Room::projectiles.size(); ++index) {
         Projectile* projectile = Room::projectiles[index];
-        
+
+        if (RoomManager::player->check(projectile->getX(), projectile->getY(), projectile) && projectile->Friendly()) {
+            delete projectile;
+            Room::projectiles.erase(Room::projectiles.begin() + index);
+            index--; 
+            break; 
+        }
+
+        for (auto& enemy : Room::enemies) {
+            if (enemy->check(projectile->getX(), projectile->getY(), projectile) && !projectile->Friendly()) {
+                delete enemy; 
+                Room::enemies.erase(std::remove(Room::enemies.begin(), Room::enemies.end(), enemy), Room::enemies.end()); 
+                RoomManager::score += 10;
+                break; 
+            }
+        }
+
         for (auto& object : RoomManager::currentRoom->getObjects()) {
             if (getTypeName(object) == "Trap") continue;
-            else if (object->check(projectile->getX(), projectile->getY(), projectile) || RoomManager::player->check(projectile->getX(), projectile->getY(), projectile)) {
+            else if (object->check(projectile->getX(), projectile->getY(), projectile)) {
                 delete projectile;
                 Room::projectiles.erase(Room::projectiles.begin() + index);
-                --index;
-                break;
+                index--;
+                break; 
             }
             projectile->move();
         }
     }
 
-    for (auto& enemy : Room::enemies) {
-        enemy->check(0.0f, 0.0f, RoomManager::player);
+    for (Enemy*& enemy : Room::enemies) {
+        if (!enemy->isReady()) {
+            enemy->shoot();
+        }
+        
     }
 
     if (RoomManager::player == entity) {
@@ -161,18 +180,18 @@ bool Room::check(float newX, float newY, Entity* entity)
                     int roomNumber = 0;
                     if (doorTier > 97) roomNumber = generateRandomNumber(12, 15);
                     else if (doorTier > 80) roomNumber = generateRandomNumber(8, 11);
-                    else if (doorTier > 50) roomNumber = generateRandomNumber(4, 7);
+                    else if (doorTier > 50) { roomNumber = generateRandomNumber(4, 7); RoomManager::score += 25; }
                     else { roomNumber = generateRandomNumber(0, 3); RoomManager::score += 10; }
 
-                
-                    std::vector<Room*> rooms = {new LWallRoom(), new InvertedLWallRoom(), new WallRoom(), new InvertWallRoom() };
+                    std::vector<Room*> rooms = {new LWallRoom(), new InvertedLWallRoom(), new WallRoom(), new InvertWallRoom(), 
+                                                new CenterPillarRoom(), new FourPillarRoom(), new FourPillarRoom(), new FourPillarRoom() };
 
                     Room* nextRoom = rooms[roomNumber];
                     for (auto& room : rooms) {
                         if (room != nextRoom) delete room;
                     }
                     //RoomManager::enemies = generateRandomNumber(2, 5);
-
+                    
                     RoomManager::currentRoom->addRoomMemory(enteringDoor, nextRoom);
                     nextRoom->addRoomMemory(returnDoor, RoomManager::currentRoom);
                     RoomManager::currentRoom = nextRoom;
@@ -254,5 +273,24 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
 
-    Room::enemies.push_back(new Enemy(0.4f, 0.4f, 0.2f, 0.2f));
+    Room::objects.push_back(new DartTrap(-0.4f,0.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000)));
+}
+
+CenterPillarRoom::CenterPillarRoom() {
+    Room::objects.push_back(new Wall(0.0f, 0.0f, 0.8f, 0.8f));
+    Room::objects.push_back(new StatusTrap(0.7f, 0.0f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 0.5f));
+    Room::objects.push_back(new StatusTrap(-0.7f, 0.0f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 0.5f));
+    Room::objects.push_back(new StatusTrap(0.0f, 0.7f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 0.5f));
+    Room::objects.push_back(new StatusTrap(0.0f, -0.7f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 0.5f));
+}
+
+FourPillarRoom::FourPillarRoom() {
+    Room::objects.push_back(new Wall(-0.5f, -0.5f, 0.3f, 0.3f));
+    Room::objects.push_back(new Wall(0.5f, -0.5f, 0.3f, 0.3f));
+    Room::objects.push_back(new Wall(-0.5f, 0.5f, 0.3f, 0.3f));
+    Room::objects.push_back(new Wall(0.5f, 0.5f, 0.3f, 0.3f));
+    Room::objects.push_back(new StatusTrap(0.6f, 0.0f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 3.0f));
+    Room::objects.push_back(new StatusTrap(-0.6f, 0.0f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 3.0f));
+    Room::objects.push_back(new StatusTrap(0.0f, 0.6f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 3.0f));
+    Room::objects.push_back(new StatusTrap(0.0f, -0.6f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 3.0f));
 }
