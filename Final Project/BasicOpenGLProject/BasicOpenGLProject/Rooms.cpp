@@ -2,6 +2,22 @@
 #include "Trap.h"
 #include "Rooms.h"
 #include <random>
+#include <iostream>
+
+std::string getTypeName(const Entity* entity) {
+    if (dynamic_cast<const Trap*>(entity)) {
+        return "Trap";
+    }
+    else if (dynamic_cast<const Wall*>(entity)) {
+        return "Wall";
+    }
+    else if (dynamic_cast<const LWall*>(entity)) {
+        return "LWall";
+    }
+    else {
+        return "Unknown";
+    }
+}
 
 Room* RoomManager::currentRoom = nullptr;
 Player* RoomManager::player = nullptr;
@@ -36,6 +52,11 @@ void Room::draw()
     glColor3f(1.0f, 0.0f, 0.0f);
     for (auto& enemy : Room::enemies) {
         enemy->draw();
+    }
+
+    glColor3f(1.0f, 0.5f, 0.0f);
+    for (auto& projectile : Room::projectiles) {
+        projectile->draw();
     }
 
 	for (auto& door : Room::doors) {
@@ -75,6 +96,7 @@ Room::Room()
         new Door(1.03f, 0.0f, 0.2f, 0.2f, false),
         new Door(-1.03f, 0.0f, 0.2f, 0.2f, false)
     };
+    Room::projectiles = {};
 }
 
 int Room::getOppositeDoor(Door* door) {
@@ -102,6 +124,21 @@ bool Room::check(float newX, float newY, Entity* entity)
         if (object->check(newX, newY, entity)) return true;
     }
     
+    for (int index = 0; index < Room::projectiles.size(); ++index) {
+        Projectile* projectile = Room::projectiles[index];
+        
+        for (auto& object : RoomManager::currentRoom->getObjects()) {
+            if (getTypeName(object) == "Trap") continue;
+            else if (object->check(projectile->getX(), projectile->getY(), projectile) || RoomManager::player->check(projectile->getX(), projectile->getY(), projectile)) {
+                delete projectile;
+                Room::projectiles.erase(Room::projectiles.begin() + index);
+                --index;
+                break;
+            }
+            projectile->move();
+        }
+    }
+
     for (auto& enemy : Room::enemies) {
         enemy->check(0.0f, 0.0f, RoomManager::player);
     }
@@ -217,6 +254,5 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
 
-    Room::objects.push_back(new StatusTrap(0.5f, 0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000)), 0.5f));
-    Room::objects.push_back(new StatusTrap(0.5f, -0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000)), 2.5f));
+    Room::enemies.push_back(new Enemy(0.4f, 0.4f, 0.2f, 0.2f));
 }

@@ -4,21 +4,6 @@
 #include <iostream>
 #include <random>
 
-static std::string getTypeName(const Entity* entity) {
-    if (dynamic_cast<const Trap*>(entity)) {
-        return "Trap";
-    }
-    else if (dynamic_cast<const Wall*>(entity)) {
-        return "Wall";
-    }
-    else if (dynamic_cast<const LWall*>(entity)) {
-        return "LWall";
-    }
-    else {
-        return "Unknown";
-    }
-}
-
 void Entity::draw()
 {
     glBegin(GL_QUADS);
@@ -94,38 +79,23 @@ bool LWall::check(float x, float y, Entity* object)
     return (LWall::Wall1->check(x, y, object) || LWall::Wall2->check(x, y, object));
 }
 
-void Enemy::draw() {
-    glBegin(GL_QUADS);
-    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
-    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right
-    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
-    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
-    glEnd();
-    for (int index = 0; index < Enemy::projectiles.size(); ++index) {
-        Projectile* projectile = Enemy::projectiles[index];
-        projectile->draw();
-        for (auto& object : RoomManager::currentRoom->getObjects()) {
-            if (getTypeName(object) == "Trap") continue;
-            else if (object->check(projectile->getX(), projectile->getY(), projectile) || RoomManager::player->check(projectile->getX(), projectile->getY(), projectile)) {
-                delete projectile;
-                Enemy::projectiles.erase(Enemy::projectiles.begin() + index);
-                --index;
-                break;
-            }
-            projectile->move();
-        }
-    }
-}
-
 bool Enemy::check(float pointX, float pointY, Entity* object)
 {
     Enemy::counter++;
-    //std::cout << "Projectile test. The counter is: " << Enemy::counter << std::endl;
     if (Enemy::counter == 150) {
-        std::cout << "Spawning projectile" << std::endl;
-        Enemy::projectiles.push_back(new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, 0.001f, object));
+        Projectile* proj = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, 0.002f, object);
+        proj->setSpeed(0.001f);
+        std::cout << "Pushing Projectile" << std::endl;
+        RoomManager::currentRoom->getProjectiles().push_back(proj);
         Enemy::counter = 0;
     }
     return false;
 }
 
+void Player::shoot()
+{
+    std::cout << "Shot" << std::endl;
+    Projectile* projectile = new Projectile(Entity::getX(), Entity::getY(), 0.05f, 0.05f, 0.002f, RoomManager::currentRoom->getObjects()[2]);
+    projectile->setFriendly();
+    RoomManager::currentRoom->getProjectiles().push_back(projectile);
+}

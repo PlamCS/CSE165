@@ -1,6 +1,9 @@
 #pragma once
 #include "Rooms.h"
 #include "Entity.h"
+#include "Trap.h"
+
+
 
 class RoomManager {
 public:

@@ -69,47 +69,50 @@ protected:
 	float speed;
 public:
 	Player(float x, float y, float width, float height, float speed) : Entity(x, y, width, height), speed(speed) {}
-	
+	void shoot();
 };
 
 class Projectile :
 	public Entity
 {
 protected:
-	float speed;
+	float projectileSpeed;
 	float initial_dx;
 	float initial_dy;
+	bool enemy;
 
 public:
-	Projectile(float x, float y, float width, float height, float speed, Entity* target) : Entity(x, y, width, height), speed(speed) {
+	Projectile(float x, float y, float width, float height, float speed, Entity* target) : Entity(x, y, width, height) , projectileSpeed(speed), enemy(true){
 		float dx = target->getX() - x;
 		float dy = target->getY() - y;
 
 		float magnitude = std::sqrt(dx * dx + dy * dy);
 
 		if (magnitude != 0) {
-			initial_dx = dx / magnitude;
-			initial_dy = dy / magnitude;
+			Projectile::initial_dx = dx / magnitude;
+			Projectile::initial_dy = dy / magnitude;
 		}
 		else {
-			initial_dx = 0;
-			initial_dy = 1;
+			Projectile::initial_dx = 0;
+			Projectile::initial_dy = 1;
 		}
 	}
+
+	bool Friendly() const { return Projectile::enemy; };
+	
+	void setFriendly() { Projectile::enemy = false; };
+
 	void move() {
-		setX(getX() + speed * initial_dx);
-		setY(getY() + speed * initial_dy);
+		Projectile::setX(Projectile::getX() + Projectile::projectileSpeed * Projectile::initial_dx);
+		Projectile::setY(Projectile::getY() + Projectile::projectileSpeed * Projectile::initial_dy);
 	}
-	//bool check(float dx, float dy, Entity* object) override;
 };
 
 class Enemy : public Entity {
 protected:
 	int counter;
-	std::vector<Projectile*> projectiles;
 public:
 	Enemy(float x, float y, float width, float height) : Entity(x, y, width, height), counter(0) {};
 
-	void draw() override;
 	bool check(float pointX, float pointY, Entity* object) override;
 };

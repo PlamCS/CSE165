@@ -1,4 +1,5 @@
 #include "RoomManager.h"
+
 RoomManager::RoomManager()
 {
 	RoomManager::score = 0;

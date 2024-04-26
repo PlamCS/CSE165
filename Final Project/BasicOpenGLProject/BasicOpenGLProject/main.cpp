@@ -25,7 +25,7 @@ void keyboardDown( unsigned char key, int x, int y )
 	if (key == '\x1B') {
 		exit(EXIT_SUCCESS);
 	}
-	keyStates[key] = true;
+	keyStates[key] = !keyStates[key];
 	glutPostRedisplay();
 }
 
@@ -79,7 +79,7 @@ void update(int value) {
 	if (keyStates['s']) dy -= MOVESPEED;
 	if (keyStates['a']) dx -= MOVESPEED;
 	if (keyStates['d']) dx += MOVESPEED;
-	
+	if (keyStates[' ']) RoomManager::player->shoot();
 	// Normalize diagonal movement
 	if (dx != 0.0f && dy != 0.0f) {
 		dx *= 0.7071f;  // sqrt(2)/2 to make diagonal speed same as cardinal directions
