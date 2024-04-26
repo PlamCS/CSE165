@@ -1,13 +1,12 @@
-#include "Rooms.h"
 #include "RoomManager.h"
-#include <iostream>
+#include "Trap.h"
+#include "Rooms.h"
 #include <random>
-#include <chrono>
-#include <thread>
 
 Room* RoomManager::currentRoom = nullptr;
 Player* RoomManager::player = nullptr;
 float RoomManager::score = 0;
+float RoomManager::playerMS = 1.0f;
 static int generateRandomNumber(int min, int max) {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -102,7 +101,6 @@ bool Room::check(float newX, float newY, Entity* entity)
     for (auto& object : objects) {
         if (object->check(newX, newY, entity)) return true;
     }
-
     
     for (auto& enemy : Room::enemies) {
         enemy->check(0.0f, 0.0f, RoomManager::player);
@@ -169,9 +167,6 @@ LWallRoom::LWallRoom() {
     Room::objects.push_back(new LWall(0.4f, -0.4f, width, height, 90));
     Room::objects.push_back(new LWall(-0.4f, -0.4f, width, height, 180));
     Room::objects.push_back(new LWall(-0.4f, 0.4f, width, height, 270));
-
-    
-
 }
 
 InvertedLWallRoom::InvertedLWallRoom()
@@ -222,7 +217,6 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
 
-    Room::enemies.push_back(new Enemy(-0.7f, 0.7f, 0.2f, 0.2f));
-    Room::enemies.push_back(new Enemy(0.7f, -0.7f, 0.2f, 0.2f));
-
+    Room::objects.push_back(new StatusTrap(0.5f, 0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000)), 0.5f));
+    Room::objects.push_back(new StatusTrap(0.5f, -0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000)), 2.5f));
 }

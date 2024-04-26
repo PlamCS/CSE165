@@ -1,6 +1,5 @@
 #pragma once
 #include <GL/freeglut.h>
-#include <chrono>
 #include <thread>
 #include <vector>
 #include <cmath>
@@ -8,15 +7,17 @@
 class Entity
 {
 protected:
-	float x, y, width, height;
+	float x, y, width, height, speed;
 public:
-	Entity(float x, float y, float width, float height) : x(x), y(y), width(width), height(height) {};
-	
+	Entity(float x, float y, float width, float height) : x(x), y(y), width(width), height(height), speed(0) {};
+
+	float getSpeed() const { return Entity::speed; };
 	float getX() const { return Entity::x; };
 	float getY() const { return Entity::y; };
 	float getWidth() const { return Entity::width; };
 	float getHeight() const { return Entity::height; };
 	
+	void setSpeed(float value) { Entity::speed = value; };
 	void setX(float value) { Entity::x = value; };
 	void setY(float value) { Entity::y = value; };
 	void setWidth(float value) { Entity::width = value; };
@@ -43,22 +44,6 @@ public:
 	void setTier(int value) { Door::tier = value; };
 };
 
-class SpikeTrap : public Entity {
-protected:
-	bool activated = false;
-	std::chrono::milliseconds activationDelay;
-public:
-	SpikeTrap(float x, float y, float width, float height, std::chrono::milliseconds delay) : Entity(x, y, width, height), activationDelay(delay), activated(false) {};
-	bool check(float pointX, float pointY, Entity* object) override;
-	void Activate();
-	void draw() override;
-};
-
-class SlowTrap : public Entity {
-public:
-	SlowTrap(float x, float y, float width, float height) : Entity(x, y, width, height) {};
-};
-
 class Wall : 
 	public Entity{
 public:
@@ -80,8 +65,11 @@ public:
 class Player :
 	public Entity
 {
+protected:
+	float speed;
 public:
-	Player(float x, float y, float width, float height) : Entity(x, y, width, height) {}
+	Player(float x, float y, float width, float height, float speed) : Entity(x, y, width, height), speed(speed) {}
+	
 };
 
 class Projectile :
@@ -121,13 +109,7 @@ protected:
 	std::vector<Projectile*> projectiles;
 public:
 	Enemy(float x, float y, float width, float height) : Entity(x, y, width, height), counter(0) {};
-	//std::vector<Projectile*> getProjectiles() { return Enemy::projectiles; };
-
-
 
 	void draw() override;
 	bool check(float pointX, float pointY, Entity* object) override;
-	//Projectile* shoot(const Player& player) {
-	//    return new Projectile(getX(), getY(), 0.05f, 0.05f, 0.01f, player);
-	//}
 };

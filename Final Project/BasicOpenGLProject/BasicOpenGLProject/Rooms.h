@@ -13,7 +13,6 @@ public:
 	Room();
 	std::vector<Door*> getDoors() { return Room::doors; }
 	std::vector<Entity*> getObjects() { return Room::objects; }
-	//std::vector<Projectile*>& getProjectiles() { return Room::projectiles; };
 	
 	int getOppositeDoor(Door* door);
 	int getDoor(Door* door);
