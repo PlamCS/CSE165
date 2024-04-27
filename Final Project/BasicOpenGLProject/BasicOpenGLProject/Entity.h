@@ -74,6 +74,7 @@ protected:
 	float initial_dy;
 	bool enemy;
 public:
+	Projectile(float x, float y, float width, float height, float dx, float dy);
 	Projectile(float x, float y, float width, float height, Entity* target);
 
 	float getDx() const { return Projectile::initial_dx; };

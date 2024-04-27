@@ -1,6 +1,7 @@
 #include "RoomManager.h"
 #include "Trap.h"
 #include "Rooms.h"
+#include "EnemyTypes.h"
 #include <random>
 #include <iostream>
 
@@ -76,6 +77,8 @@ int Room::getDoor(Door * door) {
 
 void Room::draw()
 {
+
+
     glColor3f(0.329f, 0.329f, 0.329f);
     for (auto& object : Room::objects) {
 		object->draw();
@@ -144,15 +147,17 @@ bool Room::check(float newX, float newY, Entity* entity)
                 break;
             }
         }
-
+       
         if (RoomManager::player->check(projectile->getX(), projectile->getY(), projectile) && projectile->Friendly()) {
             delete projectile;
             Room::projectiles.erase(Room::projectiles.begin() + index);
             std::cout << "Player Health Decrease" << std::endl;
             break;
         }
-
-        if(!projectile->isMarked()) projectile->move(projectile->getSpeed() * projectile->getDx(), projectile->getSpeed() * projectile->getDy());
+        
+        if (!projectile->isMarked()) {
+            projectile->move(projectile->getSpeed() * projectile->getDx(), projectile->getSpeed() * projectile->getDy());
+        } 
         else {
             delete projectile;
             Room::projectiles.erase(Room::projectiles.begin() + index);
@@ -168,21 +173,29 @@ bool Room::check(float newX, float newY, Entity* entity)
         for (auto& object : objects) {
             if (enemy->check(object->getX(), object->getY(), object)) return true;
         }
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        float min_val = -0.01f * RoomManager::playerMS;
-        float max_val = 0.01f * RoomManager::playerMS;
-        std::uniform_real_distribution<float> dis(min_val, max_val);
+        //std::random_device rd;
+        //std::mt19937 gen(rd());
+        //float min_val = -0.01f * RoomManager::playerMS;
+        //float max_val = 0.01f * RoomManager::playerMS;
+        //std::uniform_real_distribution<float> dis(min_val, max_val);
+        
+        //if (!enemy->isMarked()) enemy->move(dis(gen), dis(gen));
 
-        if (!enemy->isMarked()) enemy->move(dis(gen), dis(gen));
 
-        if (!enemy->isReady()) enemy->shoot();
+        float dx = (RoomManager::player->getX() > enemy->getX()) ? 0.008f : (RoomManager::player->getX() < enemy->getX()) ? -0.008f : 0.0f;
+        float dy = (RoomManager::player->getY() > enemy->getY()) ? 0.008f : (RoomManager::player->getY() < enemy->getY()) ? -0.008f : 0.0f;
+
+        if (!enemy->isMarked()) enemy->move(dx, dy);
+        if (!enemy->isReady()) {
+            enemy->shoot();
+        }
         if (enemy->isMarked()) {
             delete enemy;
             Room::enemies.erase(Room::enemies.begin() + index);
             index--;
             break;
         }
+
         
     }
 
@@ -296,10 +309,10 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
-    Enemy* enemy = new Enemy(0.8f, 0.8f, 0.1f, 0.1f);
-    enemy->setSpeed(RoomManager::playerMS);
-    enemy->changeCooldown(std::chrono::milliseconds(250));
-    Room::enemies.push_back(enemy);
+
+    Enemy* enemyTest = new RoundShotEnemy(0.4f, 0.4f, 0.1f, 0.1f);
+    enemyTest->setSpeed(0.0f);
+    Room::enemies.push_back(enemyTest);
 
 }
 

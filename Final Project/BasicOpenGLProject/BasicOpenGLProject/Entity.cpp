@@ -80,6 +80,19 @@ bool LWall::check(float x, float y, Entity* object)
     return (LWall::Wall1->check(x, y, object) || LWall::Wall2->check(x, y, object));
 }
 
+Projectile::Projectile(float x, float y, float width, float height, float dx, float dy) : Entity(x, y, width, height) {
+    Projectile::setSpeed(speed);
+
+    Projectile::initial_dx = dx;
+    Projectile::initial_dy = dy;
+
+    if (dx != 0.0f && dy != 0.0f) {
+        Projectile::initial_dx *= 0.7071f; 
+        Projectile::initial_dy *= 0.7071f;
+    }
+    
+}
+
 Projectile::Projectile(float x, float y, float width, float height, Entity* target) : Entity(x, y, width, height), enemy(true) {
     Projectile::setSpeed(speed);
     float dx = target->getX() - x;
@@ -116,12 +129,12 @@ void Enemy::shoot()
 bool Enemy::check(float dx, float dy, Entity* entity)
 {
     bool overlapping = (dx - entity->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
-                        dx + entity->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
-                        dy - entity->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
-                        dy + entity->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
-    
+        dx + entity->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
+        dy - entity->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
+        dy + entity->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
+
     if (dynamic_cast<const Projectile*>(entity) && overlapping) return true;
-    if (overlapping && dynamic_cast<const Wall*>(entity) || dynamic_cast<const LWall*>(entity)) {
+    if ((overlapping && dynamic_cast<const Wall*>(entity) || dynamic_cast<const LWall*>(entity)) || (overlapping && RoomManager::player == entity)) {
         float overlapTop = getY() + getHeight() / 2.0f - dy + entity->getHeight() / 2.0f;
         float overlapBottom = dy + entity->getHeight() / 2.0f - getY() - getHeight() / 2.0f;
         float overlapRight = getX() + getWidth() / 2.0f - dx + entity->getWidth() / 2.0f;
@@ -149,19 +162,13 @@ bool Enemy::check(float dx, float dy, Entity* entity)
 
         return true;
     }
-    else if (overlapping && RoomManager::player == entity) {
-        std::cout << "Player Health Decrease" << std::endl;
-
-        return true;
-    }
-    
     return false;
 }
 
 void Enemy::move(float dx, float dy)
 {
-    float newX = Enemy::getX() + dx * Enemy::speed;
-    float newY = Enemy::getY() + dy * Enemy::speed;
+    float newX = Enemy::getX() + (dx * Enemy::speed) / 3;
+    float newY = Enemy::getY() + (dy * Enemy::speed) / 3;
 
     bool collisionX = false;
     bool collisionY = false;
