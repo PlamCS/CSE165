@@ -20,7 +20,6 @@ class RunnerEnemy : public Enemy {
 public:
 	RunnerEnemy(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
 	void draw() override;
-
 };
 
 // SECOND TIER ENEMIES
@@ -29,6 +28,7 @@ class TwoBurstEnemy : public Enemy {
 public:
 	TwoBurstEnemy(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
 	void shoot() override;
+	void draw() override;
 };
 
 class RoundShotEnemy : public Enemy {
@@ -47,14 +47,19 @@ public:
 
 // MINIBOSS - BOSS TIER ENEMIES
 
-class shotgunEnemy : public Enemy {
-
+class ShotgunEnemy : public Enemy {
+public:
+	ShotgunEnemy(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
+	void draw() override;
+	void shoot() override;
 };
 
-class invincibleEnemy : public Enemy {
-
+class InvincibleEnemy : public Enemy {
+public:
+	InvincibleEnemy(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
+	void draw() override; 
 };
 
 class Boss : public Enemy {
-
+	Boss(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
 };

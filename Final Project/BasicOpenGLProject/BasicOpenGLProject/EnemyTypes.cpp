@@ -1,6 +1,7 @@
 #include "EnemyTypes.h"
 #include "RoomManager.h"
 #include <iostream>
+#include <cmath>
 
 
 // FIRST TIER ENEMIES
@@ -54,7 +55,7 @@ void CrossEnemy::shoot()
 
 
  // RUNNER ENEMY
-  
+
 void RunnerEnemy::draw() {
     glColor3f(0.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
@@ -71,20 +72,39 @@ void RunnerEnemy::draw() {
 
 // TWO-BURST ENEMY
 
+void TwoBurstEnemy::draw() {
+    glColor3f(1.0f, 0.7f, 0.0f);
+    glBegin(GL_QUADS);
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
+    glEnd();
+}
+
 void TwoBurstEnemy::shoot() {
-    isOnCooldown = true;
     std::thread cooldownThread([this]() {
         std::this_thread::sleep_for(cooldown);
         isOnCooldown = false;
         });
     cooldownThread.detach();
-    Projectile* proj = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f,  RoomManager::player);
-    Projectile* proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, RoomManager::player);
+    Projectile* proj = new Projectile(TwoBurstEnemy::getX(), TwoBurstEnemy::getY(), 0.05f, 0.05f,  RoomManager::player);
     proj->setSpeed(0.002f);
-    proj2->setSpeed(0.002f);
-    std::cout << "Pushing 2 Projectiles" << std::endl;
     RoomManager::currentRoom->getProjectiles().push_back(proj);
-    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+    std::cout << "Pushing 1 Projectiles" << std::endl;
+    std::thread secondCooldownThread([this]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(2400));
+        Projectile* proj2 = new Projectile(TwoBurstEnemy::getX(), TwoBurstEnemy::getY(), 0.05f, 0.05f, RoomManager::player);
+        proj2->setSpeed(0.002f);
+        RoomManager::currentRoom->getProjectiles().push_back(proj2);
+        std::cout << "Pushing 2 Projectile" << std::endl;
+        proj2 = nullptr;
+        delete proj2;
+        });
+    secondCooldownThread.detach();
+    proj = nullptr;
+    delete proj;
+    isOnCooldown = true;
 }
 
 // ROUND-SHOT ENEMY
@@ -200,4 +220,91 @@ bool TankEnemy::check(float dx, float dy, Entity* entity) {
         return true;
     }
     return false;
+}
+
+// TIER 3 MINIBOSS BOSS ENEMIES
+
+// SHOTGUN MINIBOSS
+
+void ShotgunEnemy::draw(){
+    glColor3f(1.0f, 0.75f, 0.25f);
+    glBegin(GL_QUADS);
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
+    glEnd();
+}
+
+void ShotgunEnemy::shoot() {
+    isOnCooldown = true;
+    std::thread cooldownThread([this]() {
+        std::this_thread::sleep_for(cooldown);
+        isOnCooldown = false;
+        });
+    cooldownThread.detach();
+    
+    Projectile* proj = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, RoomManager::player);
+    proj->setSpeed(0.03f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj);
+
+    // Define the offset for the scatter effect
+    float offset = 0.1f;
+
+    // Calculate the positions of additional projectiles
+    Projectile* proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx() + offset, proj->getDy() + offset);
+    proj2->setSpeed(0.04f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx() - offset, proj->getDy() - offset);
+    proj2->setSpeed(0.04f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx() + offset, proj->getDy() - offset);
+    proj2->setSpeed(0.04f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx() - offset, proj->getDy() + offset);
+    proj2->setSpeed(0.04f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx() + offset, proj->getDy());
+    proj2->setSpeed(0.04f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx() - offset, proj->getDy());
+    proj2->setSpeed(0.04f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx(), proj->getDy() + offset);
+    proj2->setSpeed(0.04f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx(), proj->getDy() - offset);
+    proj2->setSpeed(0.04f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj2 = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, proj->getDx(), proj->getDy());
+    proj2->setSpeed(0.04f); // Central projectile (same position as the original one)
+    RoomManager::currentRoom->getProjectiles().push_back(proj2);
+
+    proj = nullptr;
+    proj2 = nullptr;
+
+    delete proj;
+    delete proj2;
+
+ 
+}
+
+// INVINCIBLE MINIBOSS
+
+void InvincibleEnemy::draw() {
+    glColor3f(1.0f, 0.5f, 1.0f);
+    glBegin(GL_QUADS);
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
+    glEnd();
 }
