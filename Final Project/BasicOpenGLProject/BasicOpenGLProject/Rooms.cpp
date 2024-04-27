@@ -287,8 +287,6 @@ WallRoom::WallRoom()
     Room::objects.push_back(new Wall(0.6f, -0.6f, width, height));
     Room::objects.push_back(new Wall(-0.6f, -0.6f, width, height));
     Room::objects.push_back(new Wall(0.0f, 0.0f, width, height));
-
-    
 }
 
 InvertWallRoom::InvertWallRoom()
@@ -309,11 +307,6 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
-
-    Enemy* enemyTest = new RoundShotEnemy(0.4f, 0.4f, 0.1f, 0.1f);
-    enemyTest->setSpeed(0.0f);
-    Room::enemies.push_back(enemyTest);
-
 }
 
 CenterPillarRoom::CenterPillarRoom() {

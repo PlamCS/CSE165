@@ -33,3 +33,12 @@ public:
 	void draw() override;
 };
 
+class DartTrap :
+	public Trap {
+	int direction;
+public:
+	DartTrap(float x, float y, float width, float height, std::chrono::milliseconds delay, int direction) : Trap(x, y, width, height, delay), direction(direction){};
+	void Activate();
+	bool check(float pointX, float pointY, Entity* object) override;
+	void draw() override;
+};

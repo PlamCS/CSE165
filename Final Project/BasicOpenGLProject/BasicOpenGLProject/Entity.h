@@ -3,6 +3,7 @@
 #include <thread>
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 class Entity
 {
@@ -65,7 +66,6 @@ public:
 	bool check(float pointX, float pointY, Entity* object) override;
 };
 
-
 class Projectile :
 	public Entity
 {
@@ -91,20 +91,43 @@ class Player :
 {
 protected:
 	std::chrono::milliseconds cooldown;
+	std::chrono::milliseconds immunityframes;
+	std::chrono::steady_clock::time_point lastHitTime;
 	bool isOnCooldown;
+
+	int health;
 public:
-	Player(float x, float y, float width, float height) : 
+	Player(float x, float y, float width, float height) :
 		Entity(x, y, width, height), 
-		cooldown(std::chrono::milliseconds(2000)), isOnCooldown(false) {}
-	bool isReady() const { return Player::isOnCooldown; };
+		lastHitTime(std::chrono::steady_clock::now()),
+		cooldown(std::chrono::milliseconds(2000)), 
+		immunityframes(std::chrono::milliseconds(1500)),
+		isOnCooldown(false), health(1000) {}
+
+	int getHealth() const { return Player::health; };
+	void increaseHealth() { Player::health += 10; };
+	void decreaseHealth() {
+		if (!isImmune()) {
+			health -= 10;
+			lastHitTime = std::chrono::steady_clock::now();
+		}
+	};
 	void changeCooldown(std::chrono::milliseconds cooldown) { Player::cooldown = cooldown; };
+	void changeImmunity(std::chrono::milliseconds time) { Player::immunityframes = time; };
+
+	bool isReady() const { return Player::isOnCooldown; };
+	bool isImmune() const {
+		std::cout << "is Immune Currently" << std::endl;
+		auto now = std::chrono::steady_clock::now();
+		return std::chrono::duration_cast<std::chrono::milliseconds>(now - Player::lastHitTime) < Player::immunityframes;
+	}
 
 	virtual void shoot();
 };
 
 class Enemy : public Player {
 public:
-	Enemy(float x, float y, float width, float height) : Player(x, y, width, height) {};
+	Enemy(float x, float y, float width, float height) : Player(x, y, width, height) { Enemy::changeImmunity(std::chrono::milliseconds(0)); };
 	bool check(float dx, float dy, Entity* entity) override;
 	void move(float dx, float dy) override;
 	void shoot() override;

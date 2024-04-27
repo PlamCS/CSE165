@@ -293,7 +293,6 @@ void ShotgunEnemy::shoot() {
 
     delete proj;
     delete proj2;
-
  
 }
 
