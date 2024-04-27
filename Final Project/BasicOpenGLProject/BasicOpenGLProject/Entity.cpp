@@ -1,5 +1,4 @@
 #include "RoomManager.h"
-#include "Entity.h"
 #include "Trap.h"
 #include <iostream>
 #include <chrono>
@@ -16,12 +15,12 @@ void Entity::draw()
     glEnd();
 }
 
-bool Entity::check(float dx, float dy, Entity* object)
+bool Entity::check(float dx, float dy, Entity* entity)
 {
-    return (dx - object->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
-            dx + object->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
-            dy - object->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
-            dy + object->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
+    return (dx - entity->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
+            dx + entity->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
+            dy - entity->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
+            dy + entity->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
 }
 
 void Entity::move(float dx, float dy)
@@ -81,6 +80,26 @@ bool LWall::check(float x, float y, Entity* object)
     return (LWall::Wall1->check(x, y, object) || LWall::Wall2->check(x, y, object));
 }
 
+Projectile::Projectile(float x, float y, float width, float height, Entity* target) : Entity(x, y, width, height), enemy(true) {
+    Projectile::setSpeed(speed);
+    float dx = target->getX() - x;
+    float dy = target->getY() - y;
+    float magnitude = std::sqrt(dx * dx + dy * dy);
+    if (magnitude != 0) {
+        Projectile::initial_dx = dx / magnitude;
+        Projectile::initial_dy = dy / magnitude;
+    }
+    else {
+        Projectile::initial_dx = 0;
+        Projectile::initial_dy = 1;
+    }
+}
+
+void Projectile::move(float dx, float dy) {
+    Projectile::setX(Projectile::getX() + dx);
+    Projectile::setY(Projectile::getY() + dy);
+}
+
 void Enemy::shoot()
 {
     isOnCooldown = true;
@@ -89,50 +108,99 @@ void Enemy::shoot()
         isOnCooldown = false;
         });
     cooldownThread.detach();
-    Projectile* proj = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, 0.002f, RoomManager::player);
-    proj->setSpeed(0.001f);
-    std::cout << "Pushing Projectile" << std::endl;
+    Projectile* proj = new Projectile(Enemy::getX(), Enemy::getY(), 0.05f, 0.05f, RoomManager::player);
+    proj->setSpeed(0.003f);
     RoomManager::currentRoom->getProjectiles().push_back(proj);
+}
+
+bool Enemy::check(float dx, float dy, Entity* entity)
+{
+    bool overlapping = (dx - entity->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
+                        dx + entity->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
+                        dy - entity->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
+                        dy + entity->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
+    
+    if (dynamic_cast<const Projectile*>(entity) && overlapping) return true;
+    if (overlapping && dynamic_cast<const Wall*>(entity) || dynamic_cast<const LWall*>(entity)) {
+        float overlapTop = getY() + getHeight() / 2.0f - dy + entity->getHeight() / 2.0f;
+        float overlapBottom = dy + entity->getHeight() / 2.0f - getY() - getHeight() / 2.0f;
+        float overlapRight = getX() + getWidth() / 2.0f - dx + entity->getWidth() / 2.0f;
+        float overlapLeft = dx + entity->getWidth() / 2.0f - getX() - getWidth() / 2.0f;
+
+        float minOverlap = std::min({ overlapTop, overlapBottom, overlapLeft, overlapRight });
+
+        // Adjust the enemy's position based on the side of the collision
+        if (minOverlap == overlapTop) {
+            std::cout << "Top" << std::endl;
+            Enemy::move(0.0f, -overlapTop - 0.05f); // Move up
+        }
+        else if (minOverlap == overlapLeft) {
+            std::cout << "Left" << std::endl;
+            Enemy::move(overlapLeft + 0.15f, 0.0f); // Move right
+        }
+        else if (minOverlap == overlapBottom) {
+            std::cout << "Bottom" << std::endl;
+            Enemy::move(0.0f, overlapBottom + 0.15f); // Move down
+        }
+        else if (minOverlap == overlapRight) {
+            std::cout << "Right" << std::endl;
+            Enemy::move(-overlapRight - 0.05f, 0.0f); // Move left
+        }
+
+        return true;
+    }
+    else if (overlapping && RoomManager::player == entity) {
+        std::cout << "Player Health Decrease" << std::endl;
+
+        return true;
+    }
+    
+    return false;
+}
+
+void Enemy::move(float dx, float dy)
+{
+    float newX = Enemy::getX() + dx * Enemy::speed;
+    float newY = Enemy::getY() + dy * Enemy::speed;
+
+    bool collisionX = false;
+    bool collisionY = false;
+
+    if (!check(newX, Enemy::getY(), this)) Enemy::setX(newX);
+    else collisionX = true;
+    if (!check(Enemy::getX(), newY, this)) Enemy::setY(newY);
+    else collisionY = true;
+
+    if (collisionX && collisionY) {
+        Enemy::setX(newX);
+        Enemy::setY(newY);
+    }
 }
 
 void Player::shoot()
 {
-    if (isOnCooldown) {
-        return; // Exit the function early if shooting is on cooldown
-    }
-
-    // Set the cooldown flag to true
+    if (isOnCooldown) return;
     isOnCooldown = true;
 
     Entity* nearestEnemy = nullptr;
-    float minDistance = std::numeric_limits<float>::max(); // Initialize minDistance to a large value
+    float minDistance = std::numeric_limits<float>::max();
 
     for (auto& enemy : RoomManager::currentRoom->getEnemies()) {
-        // Calculate distance between player and enemy using Euclidean distance formula
         float distance = std::sqrt(std::pow(Entity::getX() - enemy->getX(), 2) + std::pow(Entity::getY() - enemy->getY(), 2));
-
-        // Check if the current enemy is closer than the previous closest enemy
         if (distance < minDistance) {
             minDistance = distance;
             nearestEnemy = enemy;
         }
     }
-
-    // If no enemy is found, exit the function
-    if (!nearestEnemy) {
-        return;
-    }
-
-    // Create a thread to delay the next shot
+    if (!nearestEnemy) return;
     std::thread cooldownThread([this]() {
         std::this_thread::sleep_for(Player::cooldown);
-
-        // Reset the cooldown flag after the cooldown period is over
         isOnCooldown = false;
         });
     cooldownThread.detach();
 
-    Projectile* projectile = new Projectile(Entity::getX(), Entity::getY(), 0.05f, 0.05f, 0.005f, nearestEnemy);
+    Projectile* projectile = new Projectile(Entity::getX(), Entity::getY(), 0.05f, 0.05f, nearestEnemy);
+    projectile->setSpeed(0.005f);
     projectile->setFriendly();
     RoomManager::currentRoom->getProjectiles().push_back(projectile);
 }

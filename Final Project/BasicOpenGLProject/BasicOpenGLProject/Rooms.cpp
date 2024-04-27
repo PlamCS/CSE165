@@ -8,11 +8,8 @@ std::string getTypeName(const Entity* entity) {
     if (dynamic_cast<const Trap*>(entity)) {
         return "Trap";
     }
-    else if (dynamic_cast<const Wall*>(entity)) {
+    else if (dynamic_cast<const Wall*>(entity) || dynamic_cast<const LWall*>(entity)) {
         return "Wall";
-    }
-    else if (dynamic_cast<const LWall*>(entity)) {
-        return "LWall";
     }
     else {
         return "Unknown";
@@ -40,47 +37,6 @@ Room* Room::getRoomMemory(int door)
     if (Room::roomMemory.find(door) != Room::roomMemory.end())
         return Room::roomMemory.at(door);
     return nullptr;
-}
-
-void Room::draw()
-{
-    glColor3f(0.329f, 0.329f, 0.329f);
-    for (auto& object : Room::objects) {
-		object->draw();
-	}
-
-    glColor3f(1.0f, 0.0f, 0.0f);
-    for (auto& enemy : Room::enemies) {
-        enemy->draw();
-    }
-
-    for (auto& projectile : Room::projectiles) {
-        if (!projectile->Friendly()) glColor3f(0.0f, 0.5f, 1.0f);
-        else glColor3f(1.0f, 0.5f, 0.0f);
-        projectile->draw();
-    }
-
-	for (auto& door : Room::doors) {
-        
-        int value = door->Tier();
-        if (!door->Tier()) {
-            if (RoomManager::score >= 500) value = generateRandomNumber(0, 100);
-            else if (RoomManager::score >= 200) value = generateRandomNumber(0, 97);
-            else if (RoomManager::score >= 50) value = generateRandomNumber(0, 80);
-            else value = generateRandomNumber(0, 50);
-            door->setTier(value);
-        }
-
-        if (Room::getRoomMemory(Room::getDoor(door))) glColor3f(0.231f, 0.231f, 0.231f);
-        else if (value > 97) glColor3f(0.859f, 0.0f, 0.0f);
-        else if (value > 80 ) glColor3f(0.502f, 0.0f, 1.0f);
-        else if (value > 50 ) glColor3f(1.0f, 0.463f, 0.0f);
-        else glColor3f(0.5f, 0.25f, 0.0f);
-        door->draw();
-	}
-
-    glColor3f(0.0f, 1.0f, 0.0f);
-    RoomManager::player->draw();
 }
 
 Room::Room()
@@ -118,46 +74,114 @@ int Room::getDoor(Door * door) {
     return enteringDoor;
 }
 
-bool Room::check(float newX, float newY, Entity* entity)
+void Room::draw()
 {
-    for (auto& object : objects) {
-        if (object->check(newX, newY, entity)) return true;
-    }
-    
-    for (int index = 0; index < Room::projectiles.size(); ++index) {
-        Projectile* projectile = Room::projectiles[index];
+    glColor3f(0.329f, 0.329f, 0.329f);
+    for (auto& object : Room::objects) {
+		object->draw();
+	}
 
-        if (RoomManager::player->check(projectile->getX(), projectile->getY(), projectile) && projectile->Friendly()) {
-            delete projectile;
-            Room::projectiles.erase(Room::projectiles.begin() + index);
-            index--; 
-            break; 
+    for (auto& projectile : Room::projectiles) {
+        if (!projectile->Friendly()) glColor3f(0.0f, 0.5f, 1.0f);
+        else glColor3f(1.0f, 0.5f, 0.0f);
+        projectile->draw();
+    }
+
+    glColor3f(1.0f, 0.0f, 0.0f);
+    for (auto& enemy : Room::enemies) {
+        enemy->draw();
+    }
+
+	for (auto& door : Room::doors) {
+        
+        int value = door->Tier();
+        if (!door->Tier()) {
+            if (RoomManager::score >= 500) value = generateRandomNumber(0, 100);
+            else if (RoomManager::score >= 200) value = generateRandomNumber(0, 97);
+            else if (RoomManager::score >= 50) value = generateRandomNumber(0, 80);
+            else value = generateRandomNumber(0, 50);
+            door->setTier(value);
         }
 
+        if (Room::getRoomMemory(Room::getDoor(door))) glColor3f(0.231f, 0.231f, 0.231f);
+        else if (value > 97) glColor3f(0.859f, 0.0f, 0.0f);
+        else if (value > 80 ) glColor3f(0.502f, 0.0f, 1.0f);
+        else if (value > 50 ) glColor3f(1.0f, 0.463f, 0.0f);
+        else glColor3f(0.5f, 0.25f, 0.0f);
+        door->draw();
+	}
+
+    glColor3f(0.0f, 1.0f, 0.0f);
+    RoomManager::player->draw();
+}
+
+bool Room::check(float newX, float newY, Entity* entity)
+{
+    bool collides = false;
+    for (auto& object : objects) {
+        if (object->check(newX, newY, entity)) collides = true;
+    }
+
+
+    for (int index = 0; index < Room::projectiles.size(); ++index) {
+        Projectile* projectile = Room::projectiles[index];
+        bool marked = false;
+        
         for (auto& enemy : Room::enemies) {
             if (enemy->check(projectile->getX(), projectile->getY(), projectile) && !projectile->Friendly()) {
-                delete enemy; 
-                Room::enemies.erase(std::remove(Room::enemies.begin(), Room::enemies.end(), enemy), Room::enemies.end()); 
+                std::cout << "Enemy is Hit" << std::endl;
                 RoomManager::score += 10;
-                break; 
+                projectile->Mark();
+                enemy->Mark();
+                break;
             }
         }
 
         for (auto& object : RoomManager::currentRoom->getObjects()) {
             if (getTypeName(object) == "Trap") continue;
             else if (object->check(projectile->getX(), projectile->getY(), projectile)) {
-                delete projectile;
-                Room::projectiles.erase(Room::projectiles.begin() + index);
-                index--;
-                break; 
+                projectile->Mark();
+                break;
             }
-            projectile->move();
+        }
+
+        if (RoomManager::player->check(projectile->getX(), projectile->getY(), projectile) && projectile->Friendly()) {
+            delete projectile;
+            Room::projectiles.erase(Room::projectiles.begin() + index);
+            std::cout << "Player Health Decrease" << std::endl;
+            break;
+        }
+
+        if(!projectile->isMarked()) projectile->move(projectile->getSpeed() * projectile->getDx(), projectile->getSpeed() * projectile->getDy());
+        else {
+            delete projectile;
+            Room::projectiles.erase(Room::projectiles.begin() + index);
+            index--;
         }
     }
+    
+    for (int index = 0; index < Room::enemies.size(); ++index) {
+        Enemy* enemy = Room::enemies[index];
 
-    for (Enemy*& enemy : Room::enemies) {
-        if (!enemy->isReady()) {
-            enemy->shoot();
+        if (enemy->check(newX, newY, entity)) collides = true;
+        
+        for (auto& object : objects) {
+            if (enemy->check(object->getX(), object->getY(), object)) return true;
+        }
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        float min_val = -0.01f * RoomManager::playerMS;
+        float max_val = 0.01f * RoomManager::playerMS;
+        std::uniform_real_distribution<float> dis(min_val, max_val);
+
+        if (!enemy->isMarked()) enemy->move(dis(gen), dis(gen));
+
+        if (!enemy->isReady()) enemy->shoot();
+        if (enemy->isMarked()) {
+            delete enemy;
+            Room::enemies.erase(Room::enemies.begin() + index);
+            index--;
+            break;
         }
         
     }
@@ -203,12 +227,12 @@ bool Room::check(float newX, float newY, Entity* entity)
                 entity->setX(-entity->getX());
                 entity->setY(-entity->getY());
 
-                return true;
+                collides = true;
             }
         }
     }
 
-    return false;
+    return collides;
 }
 
 LWallRoom::LWallRoom() {
@@ -272,8 +296,11 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
+    Enemy* enemy = new Enemy(0.8f, 0.8f, 0.1f, 0.1f);
+    enemy->setSpeed(RoomManager::playerMS);
+    enemy->changeCooldown(std::chrono::milliseconds(250));
+    Room::enemies.push_back(enemy);
 
-    Room::objects.push_back(new DartTrap(-0.4f,0.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000)));
 }
 
 CenterPillarRoom::CenterPillarRoom() {

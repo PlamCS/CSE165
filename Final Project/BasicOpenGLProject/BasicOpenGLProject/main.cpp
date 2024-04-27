@@ -93,7 +93,7 @@ void update(int value) {
 		dx *= 0.7071f;  // sqrt(2)/2 to make diagonal speed same as cardinal directions
 		dy *= 0.7071f;
 	}
-	
+
 	RoomManager::player->move(dx, dy);
 
 	//float newX = player.getX() + dx;

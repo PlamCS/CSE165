@@ -33,17 +33,3 @@ public:
 	void draw() override;
 };
 
-class DartTrap : 
-	public Trap{
-protected:
-	std::chrono::milliseconds cooldown;
-	bool isOnCooldown;
-
-public:
-	DartTrap(float x, float y, float width, float height, std::chrono::milliseconds delay) : 
-		Trap(x, y, width, height, delay), 
-		cooldown(std::chrono::milliseconds(2000)), isOnCooldown(false) {};
-	void Activate();
-	void shoot();
-	void draw();
-};
