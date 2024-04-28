@@ -299,11 +299,55 @@ void ShotgunEnemy::shoot() {
 // INVINCIBLE MINIBOSS
 
 void InvincibleEnemy::draw() {
-    glColor3f(1.0f, 0.5f, 1.0f);
+
+    glColor3f(0.35f, 0.5f, 1.0f);
     glBegin(GL_QUADS);
     glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
     glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
     glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right
     glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
     glEnd();
+
+}
+
+void InvincibleEnemy::shoot() {
+    isOnCooldown = true;
+    std::thread cooldownThread([this]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        isOnCooldown = false;
+        });
+    cooldownThread.detach();
+    InvincibleEnemy::setSpeed(5.5f);
+    std::cout << "Move" << std::endl;
+    std::thread secondCooldownThread([this]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        InvincibleEnemy::setSpeed(0.0f);
+        std::cout << "Stop" << std::endl;
+        });
+    secondCooldownThread.detach();
+}
+
+// BOSS
+
+void Boss::draw() {
+
+    glColor3f(0.15f, 0.0f, 0.0f);
+    glBegin(GL_QUADS);
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
+    glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-right
+    glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y - Entity::height / 2.0f); // Bottom-left
+    glEnd();
+}
+
+void Boss::phase1() {
+
+}
+
+void Boss::phase2() {
+
+}
+
+void Boss::phase3() {
+
 }

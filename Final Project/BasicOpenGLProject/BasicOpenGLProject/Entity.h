@@ -133,3 +133,8 @@ public:
 	void move(float dx, float dy) override;
 	void shoot() override;
 };
+
+class Item : public Entity {
+public:
+	Item(float x, float y, float width, float height) : Entity(x, y, width, height) {};
+};

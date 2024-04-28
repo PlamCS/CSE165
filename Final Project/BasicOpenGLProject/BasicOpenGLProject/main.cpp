@@ -101,6 +101,11 @@ void display_func( void )
 		}
 	}
 
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glRasterPos2f(-.98f, 0.96f);
+	for (const char& character : healthString) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
+	}
 	glutSwapBuffers();
 }
 

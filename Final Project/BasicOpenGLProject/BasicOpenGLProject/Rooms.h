@@ -9,6 +9,7 @@ protected:
 	std::vector<Entity*> objects;
 	std::vector<Door*> doors;
 	std::vector<Projectile*> projectiles;
+	std::vector<Item*> items;
 	std::map<int, Room*> roomMemory;
 public:
 	Room();
@@ -16,6 +17,7 @@ public:
 	std::vector<Entity*>& getObjects() { return Room::objects; }
 	std::vector<Projectile*>& getProjectiles() { return Room::projectiles; }
 	std::vector<Enemy*>& getEnemies() { return Room::enemies; }
+	std::vector<Item*>& getItems() { return Room::items; }
 	
 	int getOppositeDoor(Door* door);
 	int getDoor(Door* door);

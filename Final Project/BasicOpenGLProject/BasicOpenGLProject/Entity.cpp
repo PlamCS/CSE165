@@ -196,7 +196,7 @@ void Player::shoot()
     float minDistance = std::numeric_limits<float>::max();
 
     for (auto& enemy : RoomManager::currentRoom->getEnemies()) {
-        float distance = std::sqrt(std::pow(Entity::getX() - enemy->getX(), 2) + std::pow(Entity::getY() - enemy->getY(), 2));
+        double distance = std::sqrt(std::pow(Entity::getX() - enemy->getX(), 2) + std::pow(Entity::getY() - enemy->getY(), 2));
         if (distance < minDistance) {
             minDistance = distance;
             nearestEnemy = enemy;

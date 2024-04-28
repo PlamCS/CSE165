@@ -2,6 +2,7 @@
 #include "Trap.h"
 #include "Rooms.h"
 #include "EnemyTypes.h"
+#include "Items.h"
 #include <random>
 #include <iostream>
 
@@ -94,6 +95,10 @@ void Room::draw()
     glColor3f(1.0f, 0.0f, 0.0f);
     for (auto& enemy : Room::enemies) {
         enemy->draw();
+    }
+
+    for (auto& item : Room::items) {
+        item->draw();
     }
 
 	for (auto& door : Room::doors) {
@@ -350,10 +355,18 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
-    //Enemy* enemy = new ShotgunEnemy(0.0f, 0.0f, 0.05f, 0.05f);
-    //enemy->setSpeed(1.5f);
-    //enemy->changeCooldown(std::chrono::milliseconds(1000));
-    //Room::enemies.push_back(enemy);
+
+    Room::objects.push_back(new Wall(-0.5f, -0.5f, 0.075f, 0.075f));
+    Room::objects.push_back(new Wall(0.5f, -0.5f, 0.075f, 0.075f));
+    Room::objects.push_back(new Wall(-0.5f, 0.5f, 0.075f, 0.075f));
+    Room::objects.push_back(new Wall(0.5f, 0.5f, 0.075f, 0.075f));
+
+
+    //Enemy* enemyTest = new InvincibleEnemy(0.4f, 0.4f, 0.1f, 0.1f);
+    //enemyTest->setSpeed(1.0f);
+    //Room::enemies.push_back(enemyTest);
+    Item* itemTest = new Heart(-0.4f, -0.4f, 0.01f, 0.01f);
+    Room::items.push_back(itemTest);
 
 }
 

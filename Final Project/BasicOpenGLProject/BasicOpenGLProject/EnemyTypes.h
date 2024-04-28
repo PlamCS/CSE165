@@ -58,8 +58,14 @@ class InvincibleEnemy : public Enemy {
 public:
 	InvincibleEnemy(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
 	void draw() override; 
+	void shoot() override;
 };
 
 class Boss : public Enemy {
+public:
 	Boss(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
+	void draw() override;
+	void phase1();
+	void phase2();
+	void phase3();
 };
