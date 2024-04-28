@@ -93,3 +93,20 @@ public:
 	InvertedTrapRoom();
 };
 
+class ShotgunRoom :
+	public Room {
+public:
+	ShotgunRoom();
+};
+
+class InvincibleRoom :
+	public Room {
+public:
+	InvincibleRoom();
+};
+
+class FinalBossRoom :
+	public Room {
+public:
+	FinalBossRoom();
+};

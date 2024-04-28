@@ -1,8 +1,11 @@
 #include "EnemyTypes.h"
 #include "RoomManager.h"
 #include <iostream>
+#include "Items.h"
 #include <cmath>
-
+#include "Trap.h"
+#include <random>
+#include <math.h>
 
 // FIRST TIER ENEMIES
 
@@ -91,17 +94,10 @@ void TwoBurstEnemy::shoot() {
     Projectile* proj = new Projectile(TwoBurstEnemy::getX(), TwoBurstEnemy::getY(), 0.05f, 0.05f,  RoomManager::player);
     proj->setSpeed(0.002f);
     RoomManager::currentRoom->getProjectiles().push_back(proj);
-    std::cout << "Pushing 1 Projectiles" << std::endl;
-    std::thread secondCooldownThread([this]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(2400));
-        Projectile* proj2 = new Projectile(TwoBurstEnemy::getX(), TwoBurstEnemy::getY(), 0.05f, 0.05f, RoomManager::player);
-        proj2->setSpeed(0.002f);
-        RoomManager::currentRoom->getProjectiles().push_back(proj2);
-        std::cout << "Pushing 2 Projectile" << std::endl;
-        proj2 = nullptr;
-        delete proj2;
-        });
-    secondCooldownThread.detach();
+    proj = new Projectile(TwoBurstEnemy::getX(), TwoBurstEnemy::getY(), 0.05f, 0.05f, RoomManager::player);
+    proj->setSpeed(0.005f);
+    RoomManager::currentRoom->getProjectiles().push_back(proj);
+
     proj = nullptr;
     delete proj;
     isOnCooldown = true;
@@ -184,14 +180,17 @@ void TankEnemy::draw() {
     glEnd();
 }
 
-bool TankEnemy::check(float dx, float dy, Entity* entity) {
+bool TankEnemy::check(float dx, float dy, Entity* entity)
+{
     bool overlapping = (dx - entity->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
         dx + entity->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
         dy - entity->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
         dy + entity->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
 
-    if (dynamic_cast<const Projectile*>(entity) && overlapping) return true;
-    if ((overlapping && dynamic_cast<const Wall*>(entity) || dynamic_cast<const LWall*>(entity)) || (overlapping && RoomManager::player == entity)) {
+    if ((dynamic_cast<const Projectile*>(entity)) && overlapping) return true;
+    if (dynamic_cast<const Trap*>(entity)) return false;
+    if (overlapping && (RoomManager::player == entity || dynamic_cast<const Wall*>(entity))) {
+        if (RoomManager::player == entity) RoomManager::player->decreaseHealth();
         float overlapTop = getY() + getHeight() / 2.0f - dy + entity->getHeight() / 2.0f;
         float overlapBottom = dy + entity->getHeight() / 2.0f - getY() - getHeight() / 2.0f;
         float overlapRight = getX() + getWidth() / 2.0f - dx + entity->getWidth() / 2.0f;
@@ -201,20 +200,16 @@ bool TankEnemy::check(float dx, float dy, Entity* entity) {
 
         // Adjust the enemy's position based on the side of the collision
         if (minOverlap == overlapTop) {
-            std::cout << "Top" << std::endl;
-            Enemy::move(0.0f, -overlapTop - 0.55f); // Move up
+            TankEnemy::move(0.0f, -overlapTop - 0.15f); // Move up
         }
         else if (minOverlap == overlapLeft) {
-            std::cout << "Left" << std::endl;
-            Enemy::move(overlapLeft + 0.65f, 0.0f); // Move right
+            TankEnemy::move(overlapLeft + 0.25f, 0.0f); // Move right
         }
         else if (minOverlap == overlapBottom) {
-            std::cout << "Bottom" << std::endl;
-            Enemy::move(0.0f, overlapBottom + 0.65f); // Move down
+            TankEnemy::move(0.0f, overlapBottom + 0.25f); // Move down
         }
         else if (minOverlap == overlapRight) {
-            std::cout << "Right" << std::endl;
-            Enemy::move(-overlapRight - 0.55f, 0.0f); // Move left
+            TankEnemy::move(-overlapRight - 0.15f, 0.0f); // Move left
         }
 
         return true;
@@ -310,19 +305,65 @@ void InvincibleEnemy::draw() {
 
 }
 
+bool InvincibleEnemy::check(float dx, float dy, Entity* entity)
+{
+    bool overlapping = (dx - entity->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
+        dx + entity->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
+        dy - entity->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
+        dy + entity->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
+
+    if ((dynamic_cast<const Projectile*>(entity)) && overlapping) return true;
+    if (dynamic_cast<const Trap*>(entity)) return false;
+    if (overlapping && (RoomManager::player == entity || dynamic_cast<const Wall*>(entity))) {
+        if (RoomManager::player == entity) RoomManager::player->decreaseHealth();
+        float overlapTop = getY() + getHeight() / 2.0f - dy + entity->getHeight() / 2.0f;
+        float overlapBottom = dy + entity->getHeight() / 2.0f - getY() - getHeight() / 2.0f;
+        float overlapRight = getX() + getWidth() / 2.0f - dx + entity->getWidth() / 2.0f;
+        float overlapLeft = dx + entity->getWidth() / 2.0f - getX() - getWidth() / 2.0f;
+
+        float minOverlap = std::min({ overlapTop, overlapBottom, overlapLeft, overlapRight });
+
+        // Adjust the enemy's position based on the side of the collision
+        if (minOverlap == overlapTop) {
+            Enemy::move(0.0f, -overlapTop - 0.15f); // Move up
+        }
+        else if (minOverlap == overlapLeft) {
+            Enemy::move(overlapLeft + 0.25f, 0.0f); // Move right
+        }
+        else if (minOverlap == overlapBottom) {
+            Enemy::move(0.0f, overlapBottom + 0.25f); // Move down
+        }
+        else if (minOverlap == overlapRight) {
+            Enemy::move(-overlapRight - 0.15f, 0.0f); // Move left
+        }
+
+        return true;
+    }
+    return false;
+}
+
 void InvincibleEnemy::shoot() {
+    if (Enemy::getX() >= 1.0f || Enemy::getX() >= -1.0f || Enemy::getY() >= 1.0 || Enemy::getY() >= -1.0f) {
+        Enemy::setX(0.0f);
+        Enemy::setY(0.0f);
+    }
+
     isOnCooldown = true;
     std::thread cooldownThread([this]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2200));
         isOnCooldown = false;
         });
     cooldownThread.detach();
-    InvincibleEnemy::setSpeed(5.5f);
-    std::cout << "Move" << std::endl;
+    InvincibleEnemy::setSpeed(4.5f);
     std::thread secondCooldownThread([this]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         InvincibleEnemy::setSpeed(0.0f);
-        std::cout << "Stop" << std::endl;
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> dist(1, 4);
+        if (dist(gen) == 1) {
+            RoomManager::currentRoom->getObjects().push_back(new AntiInvincible(0.0f, 0.0f, 0.01f, 0.01f));
+        }
         });
     secondCooldownThread.detach();
 }
@@ -331,7 +372,13 @@ void InvincibleEnemy::shoot() {
 
 void Boss::draw() {
 
-    glColor3f(0.15f, 0.0f, 0.0f);
+
+    if(Boss::colorRed < 0.9f) glColor3f(0.15f + Boss::colorRed, 0.0f, 0.0f);
+    else {
+        glBegin(GL_LINES);
+        glVertex2f(Boss::getX(), Boss::getY()); 
+        glVertex2f(RoomManager::player->getX(), RoomManager::player->getY());
+    }
     glBegin(GL_QUADS);
     glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-left
     glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 2.0f); // Top-right
@@ -340,8 +387,65 @@ void Boss::draw() {
     glEnd();
 }
 
-void Boss::phase1() {
+void Boss::shoot()
+{
+    if (Boss::getHealth() > 400) Boss::phase1();
+    else if (Boss::getHealth() > 200);
+    else if (Boss::getHealth() > 20);
+        
+}
 
+void Boss::phase1() {
+    Boss::colorRed += 0.15f;
+
+    if (Boss::colorRed >= 1.0f) {
+        Boss::colorRed = 0.0f;
+    }
+    const int numProjectiles = 16;
+    const float angleIncrement = 360.0f / numProjectiles;
+    const float rotationFactor = 8.0f;
+
+    if (isOnCooldown) return;
+    isOnCooldown = true;
+
+    std::thread cooldownThread([this]() {
+        std::this_thread::sleep_for(Boss::cooldown);
+        isOnCooldown = false;
+        });
+    cooldownThread.detach();
+
+    for (int i = 1; i < numProjectiles + 1; i++) {
+        // Calculate the angle for this projectile
+        float direction = (i * angleIncrement) + Boss::angle;
+
+        // Convert the angle to radians
+        float radians = direction * (3.14159265358979323846 / 180.0f);
+
+        // Calculate the direction vector for this projectile
+        float directionX = std::cos(radians);
+        float directionY = std::sin(radians);
+
+        // Create and launch the projectile
+        Projectile* projectile = new Projectile(Boss::getX(), Boss::getY(), 0.025f, 0.025f, directionX, directionY);
+        projectile->setSpeed(0.005f);
+        RoomManager::currentRoom->getProjectiles().push_back(projectile);
+
+    }
+    Boss::angle += rotationFactor;
+
+    if (beamCooldown == 6) {
+        float projectileSpeed = 0.01f;
+        for (int i = 1; i <= 10; i++) {
+            Projectile* projectile = new Projectile(Boss::getX(), Boss::getY(), 0.025f, 0.025f, RoomManager::player->getX(), RoomManager::player->getY());
+            projectile->setSpeed(projectileSpeed);
+            RoomManager::currentRoom->getProjectiles().push_back(projectile);
+            projectileSpeed += 0.01f;
+        }
+        beamCooldown = 0;
+    }
+    else {
+        beamCooldown++;
+    }
 }
 
 void Boss::phase2() {

@@ -4,13 +4,14 @@
 #include "EnemyTypes.h"
 #include "Items.h"
 #include <random>
+#include <sstream>
 #include <iostream>
 
 std::string getTypeName(const Entity* entity) {
     if (dynamic_cast<const Trap*>(entity)) {
         return "Trap";
     }
-    else if (dynamic_cast<const Wall*>(entity) || dynamic_cast<const LWall*>(entity)) {
+    else if (dynamic_cast<const Wall*>(entity)) {
         return "Wall";
     }
     else {
@@ -57,6 +58,7 @@ Room::Room()
         new Door(-1.03f, 0.0f, 0.2f, 0.2f, false)
     };
     Room::projectiles = {};
+
 }
 
 int Room::getOppositeDoor(Door* door) {
@@ -79,8 +81,6 @@ int Room::getDoor(Door * door) {
 
 void Room::draw()
 {
-
-
     glColor3f(0.329f, 0.329f, 0.329f);
     for (auto& object : Room::objects) {
 		object->draw();
@@ -94,6 +94,15 @@ void Room::draw()
 
     glColor3f(1.0f, 0.0f, 0.0f);
     for (auto& enemy : Room::enemies) {
+        std::stringstream enemyHealth{};
+        enemyHealth << "Health: " << enemy->getHealth();
+        std::string enemyString = enemyHealth.str();
+
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glRasterPos2f(enemy->getX()-enemy->getWidth()/2 - enemyString.length()/100 - 0.025f, enemy->getY() + enemy->getHeight()/2 + 0.01f);
+        for (const char& character : enemyString) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
+        }
         enemy->draw();
     }
 
@@ -116,17 +125,26 @@ void Room::draw()
         door->draw();
 	}
 
+    std::stringstream health;
+    health << "Health: " << RoomManager::player->getHealth();
+    std::string healthString = health.str();
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glRasterPos2f(-.98f, 0.96f);
+    for (const char& character : healthString) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
+    }
     glColor3f(0.0f, 1.0f, 0.0f);
     RoomManager::player->draw();
 }
 
 bool Room::check(float newX, float newY, Entity* entity)
 {
+    bool collides = false;
+
     if (RoomManager::player->getHealth() == 0) {
         return true;
     }
 
-    bool collides = false;
     for (int index = 0; index < Room::objects.size(); ++index) {
         Entity* object = Room::objects[index];
         if (object->check(newX, newY, entity) && !dynamic_cast<const Item*>(object)) collides = true;
@@ -142,20 +160,28 @@ bool Room::check(float newX, float newY, Entity* entity)
 
     for (int index = 0; index < Room::projectiles.size(); ++index) {
         Projectile* projectile = Room::projectiles[index];
-        bool marked = false;
-        
+
+        if (!projectile->isMarked()) {
+            projectile->move(projectile->getSpeed() * projectile->getDx(), projectile->getSpeed() * projectile->getDy());
+        }
+        else {
+            delete projectile;
+            Room::projectiles.erase(Room::projectiles.begin() + index);
+            index--;
+            break;
+        }
+
         for (auto& enemy : Room::enemies) {
-            if (enemy->check(projectile->getX(), projectile->getY(), projectile) && !projectile->Friendly()) {
-                std::cout << "Enemy is Hit" << std::endl;
-                RoomManager::score += 10;
+            if (dynamic_cast<const InvincibleEnemy*>(enemy)) continue;
+            else if (enemy->check(projectile->getX(), projectile->getY(), projectile) && !projectile->Friendly()) {
+                enemy->decreaseHealth();
                 projectile->Mark();
-                enemy->Mark();
                 break;
             }
         }
 
         for (auto& object : RoomManager::currentRoom->getObjects()) {
-            if (getTypeName(object) == "Trap") continue;
+            if (getTypeName(object) == "Trap" || dynamic_cast<Item*>(object)) continue;
             else if (object->check(projectile->getX(), projectile->getY(), projectile)) {
                 projectile->Mark();
                 break;
@@ -170,48 +196,33 @@ bool Room::check(float newX, float newY, Entity* entity)
         }
 
         
-        if (!projectile->isMarked()) {
-            projectile->move(projectile->getSpeed() * projectile->getDx(), projectile->getSpeed() * projectile->getDy());
-        } 
-        else {
-            delete projectile;
-            Room::projectiles.erase(Room::projectiles.begin() + index);
-            index--;
-        }
+        
     }
-    
+
     for (int index = 0; index < Room::enemies.size(); ++index) {
         Enemy* enemy = Room::enemies[index];
-
-        if (enemy->check(newX, newY, entity)) collides = true;
         
-        for (auto& object : objects) {
-            if (enemy->check(object->getX(), object->getY(), object)) return true;
-        }
-        //std::random_device rd;
-        //std::mt19937 gen(rd());
-        //float min_val = -0.01f * RoomManager::playerMS;
-        //float max_val = 0.01f * RoomManager::playerMS;
-        //std::uniform_real_distribution<float> dis(min_val, max_val);
-        
-        //if (!enemy->isMarked()) enemy->move(dis(gen), dis(gen));
-
-
         float dx = (RoomManager::player->getX() > enemy->getX()) ? 0.008f : (RoomManager::player->getX() < enemy->getX()) ? -0.008f : 0.0f;
         float dy = (RoomManager::player->getY() > enemy->getY()) ? 0.008f : (RoomManager::player->getY() < enemy->getY()) ? -0.008f : 0.0f;
+
+        if (enemy->getHealth() == 0) enemy->Mark();
+        for (auto& object : objects) {
+            if (enemy->check(object->getX(), object->getY(), object)) collides = true;
+        }
 
         if (!enemy->isMarked()) enemy->move(dx, dy);
         if (!enemy->isReady()) {
             enemy->shoot();
         }
+        
         if (enemy->isMarked()) {
             delete enemy;
             Room::enemies.erase(Room::enemies.begin() + index);
             index--;
+            RoomManager::score += 10;
             break;
         }
-
-        
+        if (enemy->check(newX, newY, entity)) collides = true;
     }
 
     if (RoomManager::player == entity) {
@@ -227,31 +238,86 @@ bool Room::check(float newX, float newY, Entity* entity)
 
                 if (!RoomManager::currentRoom->getRoomMemory(enteringDoor)) {
                     int doorTier = door->Tier();
-                
+
                     // Handles New Room Creation (What Kind of Room)
                     int roomNumber = 0;
-                    if (doorTier > 97) roomNumber = generateRandomNumber(12, 15);
-                    else if (doorTier > 80) roomNumber = generateRandomNumber(8, 11);
+                    if (doorTier > 97) roomNumber = 11;
+                    else if (doorTier > 80) roomNumber = generateRandomNumber(8, 9);
                     else if (doorTier > 50) { roomNumber = generateRandomNumber(4, 7); RoomManager::score += 25; }
                     else { roomNumber = generateRandomNumber(0, 3); RoomManager::score += 10; }
 
-                    std::vector<Room*> rooms = {new LWallRoom(), new InvertedLWallRoom(), new WallRoom(), new InvertWallRoom(), 
-                                                new CenterPillarRoom(), new FourPillarRoom(), new TrapRoom(), new InvertedTrapRoom() };
+                    std::vector<Room*> rooms = { new LWallRoom(), new InvertedLWallRoom(), new WallRoom(), new InvertWallRoom(),
+                                                new CenterPillarRoom(), new FourPillarRoom(), new TrapRoom(), new InvertedTrapRoom(),
+                                                new ShotgunRoom(), new InvincibleRoom() };
 
                     Room* nextRoom = rooms[roomNumber];
                     for (auto& room : rooms) {
                         if (room != nextRoom) delete room;
                     }
                     //RoomManager::enemies = generateRandomNumber(2, 5);
-                    
-                    RoomManager::currentRoom->addRoomMemory(enteringDoor, nextRoom);
-                    nextRoom->addRoomMemory(returnDoor, RoomManager::currentRoom);
+
+                    if (doorTier < 97) {
+                        RoomManager::currentRoom->addRoomMemory(enteringDoor, nextRoom);
+                        nextRoom->addRoomMemory(returnDoor, RoomManager::currentRoom);
+                    }
+
                     RoomManager::currentRoom = nextRoom;
+
+                    if (doorTier < 80) {
+                        int enemyIndex = 0;
+                        int amountOfEnemies = generateRandomNumber(1,4);
+                        for (int i = 0; i < amountOfEnemies; i++) {
+                            float spawnX = 0.0f;
+                            float spawnY = 0.0f;
+                            int spawnPoint = 1 + i;
+                            if (spawnPoint == 1) {
+                                spawnX = -0.8f;
+                                spawnY = 0.8f;
+                            }
+                            else if (spawnPoint == 2) {
+                                spawnX = 0.8f;
+                                spawnY = 0.8f;
+                            }
+                            else if (spawnPoint == 3) {
+                                spawnX = 0.8f;
+                                spawnY = -0.8f;
+                            }
+                            else if (spawnPoint == 4) {
+                                spawnX = -0.8f;
+                                spawnY = -0.8f;
+                            }
+                            std::vector<Enemy*> createEnemies = { new Enemy(spawnX, spawnY, 0.1f, 0.1f),
+                                                                new CrossEnemy(spawnX, spawnY, 0.1f, 0.1f),
+                                                                new turretEnemy(spawnX, spawnY, 0.05f, 0.05f),
+                                                                new RunnerEnemy(spawnX, spawnY, 0.033f, 0.033f),
+
+                                                                new TwoBurstEnemy(spawnX, spawnY, 0.125f, 0.125f),
+                                                                new RoundShotEnemy(spawnX, spawnY, 0.125f, 0.125f),
+                                                                new TankEnemy(spawnX, spawnY, 0.2f, 0.2f),
+
+                                                                new ShotgunEnemy(spawnX, spawnY, 0.025f, 0.025f),
+                                                                new InvincibleEnemy(spawnX, spawnY, 0.2f, 0.2f)
+                            };
+
+                            if (RoomManager::score >= 50)
+                                enemyIndex = generateRandomNumber(0, 6);
+                            else
+                                enemyIndex = generateRandomNumber(0, 3);
+                            RoomManager::currentRoom->getEnemies().push_back(createEnemies[enemyIndex]);
+                            createEnemies[enemyIndex]->setSpeed(1.0f);
+
+                            for (auto& enemy : createEnemies) {
+                                if (enemy != createEnemies[enemyIndex]) delete enemy;
+                            }
+                            createEnemies.clear();
+                        }
+                    }
                 }
                 else {
                     RoomManager::currentRoom = Room::getRoomMemory(enteringDoor);
                 }
-
+                RoomManager::player->increaseHealth();
+                RoomManager::player->decreaseHealth();
                 entity->setX(-entity->getX());
                 entity->setY(-entity->getY());
 
@@ -302,33 +368,50 @@ Room::~Room()
 }
 
 LWallRoom::LWallRoom() {
-    float width = 0.3f;
+    float width = 0.35f;
     float height = 0.05f;
+    
+    Room::objects.push_back(new Wall(0.35f, 0.5f, width, height));
+    Room::objects.push_back(new Wall(0.5f, 0.35f, height, width));
+
+    Room::objects.push_back(new Wall(-0.35f, 0.5f, width, height));
+    Room::objects.push_back(new Wall(-0.5f, 0.35f, height, width));
+    
+    Room::objects.push_back(new Wall(0.35f, -0.5f, width, height));
+    Room::objects.push_back(new Wall(0.5f, -0.35f, height, width));
+    
+    Room::objects.push_back(new Wall(-0.35f, -0.5f, width, height));
+    Room::objects.push_back(new Wall(-0.5f, -0.35f, height, width));
 
     Room::objects.push_back(new SpikeTrap(0.3f, 0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
     Room::objects.push_back(new SpikeTrap(0.3f, -0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
     Room::objects.push_back(new SpikeTrap(-0.3f, -0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
     Room::objects.push_back(new SpikeTrap(-0.3f, 0.3f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
-    Room::objects.push_back(new LWall(0.4f, 0.4f, width, height, 0));
-    Room::objects.push_back(new LWall(0.4f, -0.4f, width, height, 90));
-    Room::objects.push_back(new LWall(-0.4f, -0.4f, width, height, 180));
-    Room::objects.push_back(new LWall(-0.4f, 0.4f, width, height, 270));
 }
 
 InvertedLWallRoom::InvertedLWallRoom()
 {
-
-    
-    float width = 0.3f;
+    float width = 0.35f;
     float height = 0.05f;
+
+    Room::objects.push_back(new Wall(0.3f, 0.45f, height, width));
+    Room::objects.push_back(new Wall(0.45f, 0.3f, width, height));
+
+    Room::objects.push_back(new Wall(-0.3f, 0.45f, height, width));
+    Room::objects.push_back(new Wall(-0.45f, 0.3f, width, height));
+
+    Room::objects.push_back(new Wall(0.3f, -0.45f, height, width));
+    Room::objects.push_back(new Wall(0.45f, -0.3f, width, height));
+    
+    Room::objects.push_back(new Wall(-0.3f, -0.45f, height, width));
+    Room::objects.push_back(new Wall(-0.45f, -0.3f, width, height));
+    
+
     Room::objects.push_back(new SpikeTrap(0.5f, 0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
     Room::objects.push_back(new SpikeTrap(0.5f, -0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
     Room::objects.push_back(new SpikeTrap(-0.5f, -0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
     Room::objects.push_back(new SpikeTrap(-0.5f, 0.5f, 0.3f, 0.3f, std::chrono::milliseconds(generateRandomNumber(500, 1000))));
-    Room::objects.push_back(new LWall(0.4f, 0.4f, width, height, 180));
-    Room::objects.push_back(new LWall(0.4f, -0.4f, width, height, 270));
-    Room::objects.push_back(new LWall(-0.4f, -0.4f, width, height, 0));
-    Room::objects.push_back(new LWall(-0.4f, 0.4f, width, height, 90));
+
 }
 
 WallRoom::WallRoom()
@@ -355,6 +438,8 @@ InvertWallRoom::InvertWallRoom()
 
 BeginningRoom::BeginningRoom()
 {
+    float width = 0.3f;
+    float height = 0.05f;
     Room::doors.clear();
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
@@ -367,12 +452,9 @@ BeginningRoom::BeginningRoom()
     Room::objects.push_back(new Wall(0.5f, 0.5f, 0.075f, 0.075f));
 
 
-    //Enemy* enemyTest = new InvincibleEnemy(0.4f, 0.4f, 0.1f, 0.1f);
-    //enemyTest->setSpeed(1.0f);
-    //Room::enemies.push_back(enemyTest);
-    Entity* itemTest = new SpeedBuff(-0.4f, -0.4f, 0.01f, 0.01f);
-    Room::objects.push_back(itemTest);
-
+    /*Enemy* enemyTest = new Enemy(0.4f, 0.4f, 0.1f, 0.1f);
+    enemyTest->setSpeed(1.0f);
+    Room::enemies.push_back(enemyTest);*/
 }
 
 CenterPillarRoom::CenterPillarRoom() {
@@ -403,9 +485,9 @@ TrapRoom::TrapRoom()
     Room::objects.push_back(new Wall(0.6f, -0.6f, width, height));
     Room::objects.push_back(new Wall(-0.6f, -0.6f, width, height));
     Room::objects.push_back(new Wall(0.0f, 0.0f, width, height));
-
-    Room::objects.push_back(new DartTrap(0.0f, 0.0f, height, width, std::chrono::milliseconds(1000), 0));
-    Room::objects.push_back(new DartTrap(0.0f, 0.0f, height, width, std::chrono::milliseconds(1000), 180));
+        
+    Room::objects.push_back(new DartTrap(0.0f, 0.0f, height, width, std::chrono::milliseconds(1000), 90));
+    Room::objects.push_back(new DartTrap(0.0f, 0.0f, height, width, std::chrono::milliseconds(1000), 270));
     Room::objects.push_back(new DartTrap(-1.0f, 0.8f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 0));
     Room::objects.push_back(new DartTrap(1.0f, 0.8f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 180));
     Room::objects.push_back(new DartTrap(-1.0f, -0.8f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 0));
@@ -428,4 +510,54 @@ InvertedTrapRoom::InvertedTrapRoom()
     Room::objects.push_back(new DartTrap(0.8f, 1.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 270));
     Room::objects.push_back(new DartTrap(-0.8f, -1.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 90));
     Room::objects.push_back(new DartTrap(0.8f, -1.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 90));
+}
+
+ShotgunRoom::ShotgunRoom()
+{
+    Room::objects.push_back(new Wall(0.7f, 0.7f, 0.5f, 0.5f));
+    Room::objects.push_back(new Wall(-0.7f, 0.7f, 0.5f, 0.5f));
+    Room::objects.push_back(new Wall(0.7f, -0.7f, 0.5f, 0.5f));
+    Room::objects.push_back(new Wall(-0.7f, -0.7f, 0.5f, 0.5f));
+
+    Room::objects.push_back(new Wall(0.25f, -0.4f, 0.1f, 0.15f));
+    Room::objects.push_back(new Wall(0.45f, -0.25f, 0.1f, 0.1f));
+    Room::objects.push_back(new Wall(0.27f, -0.2f, 0.1f, 0.1f));
+
+    Room::objects.push_back(new Wall(-0.25f, -0.5f, 0.15f, 0.15f));
+    Room::objects.push_back(new Wall(-0.15f, -0.3f, 0.1f, 0.1f));
+    Room::objects.push_back(new Wall(-0.35f, -0.2f, 0.15f, 0.15f));
+
+    Room::objects.push_back(new Wall(-0.15f, 0.55f, 0.2f, 0.15f));
+    Room::objects.push_back(new Wall(-0.25f, 0.3f, 0.15f, 0.15f));
+    Room::objects.push_back(new Wall(-0.5f, 0.25f, 0.15f, 0.1f));
+
+    Room::objects.push_back(new Wall(0.25f, 0.4f, 0.1f, 0.15f));
+    Room::objects.push_back(new Wall(0.45f, 0.25f, 0.2f, 0.15f));
+    Room::objects.push_back(new Wall(0.23f, 0.15f, 0.1f, 0.1f));
+
+    Enemy* enemy = new ShotgunEnemy(0.0f, 0.0f, 0.05f, 0.05f);
+    enemy->setSpeed(1.0f);
+    enemy->setHealth(60);
+    Room::enemies.push_back(enemy);
+
+}
+
+InvincibleRoom::InvincibleRoom()
+{
+    Enemy* enemy = new InvincibleEnemy(0.0f, 0.0f, 0.15f, 0.15f);
+    enemy->setHealth(100);
+    Room::enemies.push_back(enemy);
+}
+
+FinalBossRoom::FinalBossRoom()
+{
+    for (auto& door : Room::doors) {
+        delete door;
+    }
+    Room::doors.clear();
+    Boss* boss = new Boss(0.0f, 0.0f, 0.4f, 0.4f);
+    boss->setHealth(600);
+    boss->changeCooldown(std::chrono::milliseconds(500));
+    Room::enemies.push_back(boss);
+
 }

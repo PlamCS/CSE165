@@ -43,50 +43,7 @@ void Entity::move(float dx, float dy)
     }
 }
 
-LWall::LWall(float x, float y, float width, float height, int rotation) : Entity(x, y, width, height)
-{
-    // Pivot Point is Top Right Default
-    LWall::rotation = rotation;
-
-    float posX = x + (width - height) / 2.0f;
-    float posY = y + (width - height) / 2.0f;
-
-    if (LWall::rotation == 90) {
-        // Pivot Point is Bottom Right Default
-        posX = x + (width - height) / 2.0f;
-        posY = y - (width - height) / 2.0f;
-    } else if (LWall::rotation == 180) {
-        // Pivot Point is Bottom Left Default
-        posX = x - (width - height) / 2.0f;
-        posY = y - (width - height) / 2.0f;
-    } else if (LWall::rotation == 270) {
-        // Pivot Point is Top Left Default
-        posX = x - (width - height) / 2.0f;
-        posY = y + (width - height) / 2.0f;
-    }
-
-    LWall::Wall1 = new Wall(posX, y, height, width);
-    LWall::Wall2 = new Wall(x, posY, width, height);
-}
-
-void LWall::draw() {
-    glColor3f(0.329f, 0.329f, 0.329f);
-    LWall::Wall1->draw();
-    LWall::Wall2->draw();
-}
-
-bool LWall::check(float x, float y, Entity* object)
-{
-    return (LWall::Wall1->check(x, y, object) || LWall::Wall2->check(x, y, object));
-}
-
-LWall::~LWall()
-{
-    delete LWall::Wall1;
-    delete LWall::Wall2;
-}
-
-Projectile::Projectile(float x, float y, float width, float height, float dx, float dy) : Entity(x, y, width, height), enemy(nullptr) {
+Projectile::Projectile(float x, float y, float width, float height, float dx, float dy) : Entity(x, y, width, height), enemy(true) {
     Projectile::setSpeed(speed);
 
     Projectile::initial_dx = dx;
@@ -132,6 +89,26 @@ void Enemy::shoot()
     RoomManager::currentRoom->getProjectiles().push_back(proj);
 }
 
+Enemy::Enemy(float x, float y, float width, float height) : Player(x, y, width, height) { 
+    Enemy::setHealth(20);
+    Enemy::changeImmunity(std::chrono::milliseconds(0)); 
+}
+
+bool Enemy::checkCollision(Enemy* enemy) {
+    // Calculate the distances between the centers of the two enemies
+    float dx = enemy->getX() - Enemy::getX();
+    float dy = enemy->getY() - Enemy::getY();
+
+    // Calculate the sum of the radii of the two enemies
+    float combinedRadius = (Enemy::getWidth() + enemy->getWidth()) / 2.0f;
+
+    // Check if the distance between the centers is less than the sum of the radii
+    bool colliding = (dx * dx + dy * dy) < (combinedRadius * combinedRadius);
+
+    return colliding;
+}
+
+
 bool Enemy::check(float dx, float dy, Entity* entity)
 {
     bool overlapping = (dx - entity->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
@@ -139,9 +116,10 @@ bool Enemy::check(float dx, float dy, Entity* entity)
         dy - entity->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
         dy + entity->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
 
-    if (dynamic_cast<const Projectile*>(entity) && overlapping) return true;
-    if ((overlapping && dynamic_cast<const Wall*>(entity) || dynamic_cast<const LWall*>(entity)) || (overlapping && RoomManager::player == entity)) {
-        RoomManager::player->decreaseHealth();
+    if ((dynamic_cast<const Projectile*>(entity)) && overlapping) return true;
+    if (dynamic_cast<const Trap*>(entity)) return false;
+    if (overlapping && (RoomManager::player == entity || dynamic_cast<const Wall*>(entity))) {
+        if (RoomManager::player == entity) RoomManager::player->decreaseHealth();
         float overlapTop = getY() + getHeight() / 2.0f - dy + entity->getHeight() / 2.0f;
         float overlapBottom = dy + entity->getHeight() / 2.0f - getY() - getHeight() / 2.0f;
         float overlapRight = getX() + getWidth() / 2.0f - dx + entity->getWidth() / 2.0f;
@@ -176,13 +154,41 @@ void Enemy::move(float dx, float dy)
     bool collisionX = false;
     bool collisionY = false;
 
-    if (!check(newX, Enemy::getY(), this)) Enemy::setX(newX);
-    else collisionX = true;
-    if (!check(Enemy::getX(), newY, this)) Enemy::setY(newY);
-    else collisionY = true;
+    for (auto& enemy : RoomManager::currentRoom->getEnemies()) {
+        if (enemy != this && Enemy::check(newX, Enemy::getY(), enemy)) {
+            collisionX = true;
+        }
+        if (enemy != this && Enemy::check(Enemy::getX(), newY, enemy)) {
+            collisionY = true;
+        }
+    }
 
-    if (collisionX && collisionY) {
+    for (auto& enemy : RoomManager::currentRoom->getEnemies()) {
+        if (enemy != this && Enemy::checkCollision(enemy)) {
+            // Calculate the direction from this enemy to the other enemy
+            float directionX = enemy->getX() - Enemy::getX();
+            float directionY = enemy->getY() - Enemy::getY();
+
+            // Normalize the direction
+            float length = sqrt(directionX * directionX + directionY * directionY);
+            directionX /= length;
+            directionY /= length;
+
+            // Move slightly away from the other enemy
+            newX = Enemy::getX() - directionX * 0.05f;
+            newY = Enemy::getY() - directionY * 0.05f;
+
+            collisionX = false; // Reset collision flags to allow movement
+            collisionY = false;
+            break; // Exit loop since we only want to handle one collision
+        }
+    }
+
+
+    if (!collisionX) {
         Enemy::setX(newX);
+    }
+    if (!collisionY) {
         Enemy::setY(newY);
     }
 }
@@ -209,7 +215,9 @@ void Player::shoot()
         });
     cooldownThread.detach();
 
-    Projectile* projectile = new Projectile(Entity::getX(), Entity::getY(), 0.05f, 0.05f, nearestEnemy);
+    float projectileSize = 0.05f;
+    if (dynamic_cast<FinalBossRoom*>(RoomManager::currentRoom)) projectileSize = 0.025;
+    Projectile* projectile = new Projectile(Entity::getX(), Entity::getY(), projectileSize, projectileSize, nearestEnemy);
     projectile->setSpeed(0.005f);
     projectile->setFriendly();
     RoomManager::currentRoom->getProjectiles().push_back(projectile);
@@ -258,5 +266,12 @@ bool Item::check(float dx, float dy, Entity* object) {
         RoomManager::score += 15;
         return true;
     }
+    return false;
+}
+
+bool Beam::check(float dx, float dy, Entity* entity)
+{
+
+
     return false;
 }

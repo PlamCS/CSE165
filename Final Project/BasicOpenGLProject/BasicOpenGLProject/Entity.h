@@ -54,19 +54,6 @@ public:
 	Wall(float x, float y, float width, float height) : Entity(x, y, width, height) {};
 };
 
-class LWall : 
-	public Entity {
-protected:
-	Entity* Wall1;
-	Entity* Wall2;
-	int rotation;
-public:
-	LWall(float x, float y, float width, float height, int rotation);
-	void draw() override;
-	bool check(float pointX, float pointY, Entity* object) override;
-	~LWall();
-};
-
 class Projectile :
 	public Entity
 {
@@ -87,6 +74,15 @@ public:
 	void move(float dx, float dy) override;
 };
 
+class Beam :
+	public Projectile {
+public:
+	Beam(float x, float y, float width, float height, float idx, float idy) : Projectile(x, y, width, height, idx, idy) {};
+	bool check(float dx, float dy, Entity* entity) override;
+
+
+};
+
 class Player :
 	public Entity
 {
@@ -101,7 +97,7 @@ public:
 	Player(float x, float y, float width, float height) :
 		Entity(x, y, width, height), 
 		lastHitTime(std::chrono::steady_clock::now()),
-		cooldown(std::chrono::milliseconds(2000)), 
+		cooldown(std::chrono::milliseconds(1000)), 
 		immunityframes(std::chrono::milliseconds(1500)),
 		isOnCooldown(false), health(50) {}
 
@@ -114,12 +110,12 @@ public:
 		}
 	};
 	void setHealth(int value) { Player::health = value; };
+
 	void changeCooldown(std::chrono::milliseconds cooldown) { Player::cooldown = cooldown; };
 	void changeImmunity(std::chrono::milliseconds time) { Player::immunityframes = time; };
 
 	bool isReady() const { return Player::isOnCooldown; };
 	bool isImmune() const {
-		std::cout << "is Immune Currently" << std::endl;
 		auto now = std::chrono::steady_clock::now();
 		return std::chrono::duration_cast<std::chrono::milliseconds>(now - Player::lastHitTime) < Player::immunityframes;
 	}
@@ -129,7 +125,8 @@ public:
 
 class Enemy : public Player {
 public:
-	Enemy(float x, float y, float width, float height) : Player(x, y, width, height) { Enemy::changeImmunity(std::chrono::milliseconds(0)); };
+	Enemy(float x, float y, float width, float height);
+	bool checkCollision(Enemy* enemy);
 	bool check(float dx, float dy, Entity* entity) override;
 	void move(float dx, float dy) override;
 	void shoot() override;

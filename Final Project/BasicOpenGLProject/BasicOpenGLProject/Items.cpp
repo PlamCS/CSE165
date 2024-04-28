@@ -143,8 +143,13 @@ void AntiInvincible::draw() {
 }
 
 bool AntiInvincible::check(float dx, float dy, Entity* object) {
-	return (dx - object->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
+	bool condition = (dx - object->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
 		dx + object->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
 		dy - object->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
 		dy + object->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
+	if (condition) {
+		RoomManager::currentRoom->getEnemies()[0]->decreaseHealth();
+		return true;
+	}
+	return false;
 }

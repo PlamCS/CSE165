@@ -57,14 +57,20 @@ public:
 class InvincibleEnemy : public Enemy {
 public:
 	InvincibleEnemy(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
-	void draw() override; 
+	void draw() override;
+	bool check(float dx, float dy, Entity* entity) override;
 	void shoot() override;
 };
 
 class Boss : public Enemy {
+protected:
+	float angle;
+	int beamCooldown;
+	float colorRed;
 public:
-	Boss(float x, float y, float width, float height) : Enemy(x, y, width, height) {};
+	Boss(float x, float y, float width, float height) : Enemy(x, y, width, height), angle(0.0f), beamCooldown(0), colorRed(0.0){};
 	void draw() override;
+	void shoot() override;
 	void phase1();
 	void phase2();
 	void phase3();

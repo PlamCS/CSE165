@@ -92,6 +92,9 @@ void StatusTrap::draw()
 
 void DartTrap::Activate()
 {
+    DartTrap::activated = true;
+
+    if (RoomManager::currentRoom->getEnemies().empty()) return;
     float offset = 0.1f;
     
     float dirXOne = DartTrap::getX() + offset;
@@ -158,7 +161,6 @@ void DartTrap::Activate()
     proj = nullptr;
     delete proj;
 
-    DartTrap::activated = true;
 }
 
 bool DartTrap::check(float dx, float dy, Entity* object)

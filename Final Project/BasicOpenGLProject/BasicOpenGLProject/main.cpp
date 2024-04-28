@@ -56,16 +56,10 @@ void display_func( void )
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	map->draw();
-
 	// Convert score to a string using stringstream
 	std::stringstream score;
 	score << "Score: " << RoomManager::score;
 	std::string scoreString = score.str();
-
-	std::stringstream health;
-	health << "Health: " << RoomManager::player->getHealth();
-	std::string healthString = health.str();
 
 	// Set the text color (white for example)
 	glColor3f(1.0f, 1.0f, 1.0f);
@@ -77,16 +71,12 @@ void display_func( void )
 	// Switch to modelview matrix for text positioning
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	
+	map->draw();
 
 	// Move the text to the top right corner
 	glRasterPos2f(0.8f, 0.96f);
 	for (const char& character : scoreString) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
-	}
-
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glRasterPos2f(-.98f, 0.96f);
-	for (const char& character : healthString) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
 	}
 
@@ -95,17 +85,14 @@ void display_func( void )
 		lose << "You Lost. Press Enter to Restart";
 		std::string loseString = lose.str();
 		glColor3f(1.0f, 0.0f, 0.0f);
-		glRasterPos2f(-0.2f, 0.0f);
+		glRasterPos2f(-(float)(loseString.length() / 100) - 0.35f, 0.0f);
 		for (const char& character : loseString) {
 			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, character); // Use a built-in font
 		}
 	}
+	
 
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glRasterPos2f(-.98f, 0.96f);
-	for (const char& character : healthString) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
-	}
+
 	glutSwapBuffers();
 }
 
