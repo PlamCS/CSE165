@@ -97,10 +97,6 @@ void Room::draw()
         enemy->draw();
     }
 
-    for (auto& item : Room::items) {
-        item->draw();
-    }
-
 	for (auto& door : Room::doors) {
         
         int value = door->Tier();
@@ -131,8 +127,16 @@ bool Room::check(float newX, float newY, Entity* entity)
     }
 
     bool collides = false;
-    for (auto& object : objects) {
-        if (object->check(newX, newY, entity)) collides = true;
+    for (int index = 0; index < Room::objects.size(); ++index) {
+        Entity* object = Room::objects[index];
+        if (object->check(newX, newY, entity) && !dynamic_cast<const Item*>(object)) collides = true;
+        if (object->check(newX, newY, entity) && dynamic_cast<const Item*>(object)) object->Mark();
+        if (object->isMarked()) {
+            delete object;
+            Room::objects.erase(Room::objects.begin() + index);
+            index--;
+            break;
+        }
     }
 
 
@@ -164,6 +168,7 @@ bool Room::check(float newX, float newY, Entity* entity)
             RoomManager::player->decreaseHealth();
             break;
         }
+
         
         if (!projectile->isMarked()) {
             projectile->move(projectile->getSpeed() * projectile->getDx(), projectile->getSpeed() * projectile->getDy());
@@ -365,8 +370,8 @@ BeginningRoom::BeginningRoom()
     //Enemy* enemyTest = new InvincibleEnemy(0.4f, 0.4f, 0.1f, 0.1f);
     //enemyTest->setSpeed(1.0f);
     //Room::enemies.push_back(enemyTest);
-    Item* itemTest = new Heart(-0.4f, -0.4f, 0.01f, 0.01f);
-    Room::items.push_back(itemTest);
+    Entity* itemTest = new SpeedBuff(-0.4f, -0.4f, 0.01f, 0.01f);
+    Room::objects.push_back(itemTest);
 
 }
 

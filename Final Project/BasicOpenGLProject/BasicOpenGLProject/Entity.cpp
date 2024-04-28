@@ -214,3 +214,49 @@ void Player::shoot()
     projectile->setFriendly();
     RoomManager::currentRoom->getProjectiles().push_back(projectile);
 }
+
+void Item::draw() {
+    // Set the number of segments for the circle
+    int numSegments = 100;
+
+    // Calculate radius based on width and height
+    float radius = (width + height);
+
+    // Set color to red
+    glColor3f(0.75f, 0.75f, 0.75f);
+
+    // Begin drawing triangle fan for the filled circle
+    glBegin(GL_TRIANGLE_FAN);
+
+    // Center of the circle
+    glVertex2f(x, y);
+
+    for (int i = 0; i <= numSegments; ++i) {
+        // Calculate angle for each segment
+        float theta = 2.0f * 3.1415926f * float(i) / float(numSegments);
+
+        // Calculate x and y coordinates for the current segment
+        float xCoord = x + radius * cosf(theta);
+        float yCoord = y + radius * sinf(theta);
+
+        // Set vertex
+        glVertex2f(xCoord, yCoord);
+    }
+
+    // End drawing
+    glEnd();
+
+}
+
+bool Item::check(float dx, float dy, Entity* object) {
+    bool condition = (dx - object->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
+        dx + object->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
+        dy - object->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
+        dy + object->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
+
+    if (condition) {
+        RoomManager::score += 15;
+        return true;
+    }
+    return false;
+}

@@ -113,6 +113,7 @@ public:
 			lastHitTime = std::chrono::steady_clock::now();
 		}
 	};
+	void setHealth(int value) { Player::health = value; };
 	void changeCooldown(std::chrono::milliseconds cooldown) { Player::cooldown = cooldown; };
 	void changeImmunity(std::chrono::milliseconds time) { Player::immunityframes = time; };
 
@@ -137,4 +138,6 @@ public:
 class Item : public Entity {
 public:
 	Item(float x, float y, float width, float height) : Entity(x, y, width, height) {};
+	void draw() override;
+	bool check(float dx, float dy, Entity* object) override;
 };
