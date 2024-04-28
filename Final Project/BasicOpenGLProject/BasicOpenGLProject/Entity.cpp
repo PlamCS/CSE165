@@ -80,7 +80,13 @@ bool LWall::check(float x, float y, Entity* object)
     return (LWall::Wall1->check(x, y, object) || LWall::Wall2->check(x, y, object));
 }
 
-Projectile::Projectile(float x, float y, float width, float height, float dx, float dy) : Entity(x, y, width, height) {
+LWall::~LWall()
+{
+    delete LWall::Wall1;
+    delete LWall::Wall2;
+}
+
+Projectile::Projectile(float x, float y, float width, float height, float dx, float dy) : Entity(x, y, width, height), enemy(nullptr) {
     Projectile::setSpeed(speed);
 
     Projectile::initial_dx = dx;
@@ -135,6 +141,7 @@ bool Enemy::check(float dx, float dy, Entity* entity)
 
     if (dynamic_cast<const Projectile*>(entity) && overlapping) return true;
     if ((overlapping && dynamic_cast<const Wall*>(entity) || dynamic_cast<const LWall*>(entity)) || (overlapping && RoomManager::player == entity)) {
+        RoomManager::player->decreaseHealth();
         float overlapTop = getY() + getHeight() / 2.0f - dy + entity->getHeight() / 2.0f;
         float overlapBottom = dy + entity->getHeight() / 2.0f - getY() - getHeight() / 2.0f;
         float overlapRight = getX() + getWidth() / 2.0f - dx + entity->getWidth() / 2.0f;
@@ -144,19 +151,15 @@ bool Enemy::check(float dx, float dy, Entity* entity)
 
         // Adjust the enemy's position based on the side of the collision
         if (minOverlap == overlapTop) {
-            std::cout << "Top" << std::endl;
             Enemy::move(0.0f, -overlapTop - 0.05f); // Move up
         }
         else if (minOverlap == overlapLeft) {
-            std::cout << "Left" << std::endl;
             Enemy::move(overlapLeft + 0.15f, 0.0f); // Move right
         }
         else if (minOverlap == overlapBottom) {
-            std::cout << "Bottom" << std::endl;
             Enemy::move(0.0f, overlapBottom + 0.15f); // Move down
         }
         else if (minOverlap == overlapRight) {
-            std::cout << "Right" << std::endl;
             Enemy::move(-overlapRight - 0.05f, 0.0f); // Move left
         }
 

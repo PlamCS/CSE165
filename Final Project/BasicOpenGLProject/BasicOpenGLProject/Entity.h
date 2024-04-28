@@ -64,6 +64,7 @@ public:
 	LWall(float x, float y, float width, float height, int rotation);
 	void draw() override;
 	bool check(float pointX, float pointY, Entity* object) override;
+	~LWall();
 };
 
 class Projectile :
@@ -102,7 +103,7 @@ public:
 		lastHitTime(std::chrono::steady_clock::now()),
 		cooldown(std::chrono::milliseconds(2000)), 
 		immunityframes(std::chrono::milliseconds(1500)),
-		isOnCooldown(false), health(1000) {}
+		isOnCooldown(false), health(50) {}
 
 	int getHealth() const { return Player::health; };
 	void increaseHealth() { Player::health += 10; };

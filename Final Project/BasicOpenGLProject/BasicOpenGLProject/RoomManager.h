@@ -10,6 +10,5 @@ public:
 
 	RoomManager();
 	void draw() { RoomManager::currentRoom->draw(); };
-	//Use Check to finish game
-	//bool check();
+	~RoomManager();
 }; 

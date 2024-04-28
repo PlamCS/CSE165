@@ -22,9 +22,12 @@ public:
 
 	void addRoomMemory(int door, Room* room);
 	Room* getRoomMemory(int door);
+	void removeRoomMemory(Room* room);
 
 	void draw();
 	virtual bool check(float newX, float newY, Entity* Player);
+
+	virtual ~Room();
 };
 
 class BeginningRoom :
@@ -74,5 +77,19 @@ class FourPillarRoom :
 {
 public:
 	FourPillarRoom();
+};
+
+class TrapRoom:
+	public Room
+{
+public:
+	TrapRoom();
+};
+
+class InvertedTrapRoom :
+	public Room
+{
+public:
+	InvertedTrapRoom();
 };
 

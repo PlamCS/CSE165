@@ -19,6 +19,7 @@ int SCREENWIDTH = 900;
 int SCREENHEIGHT = 900;
 
 bool* keyStates = new bool[256];
+RoomManager* map = new RoomManager();
 
 void initallizeKeys() {
 	for (int i = 0; i < 256; ++i) {
@@ -28,9 +29,17 @@ void initallizeKeys() {
 
 void keyboardDown( unsigned char key, int x, int y )
 {
+	if (key == 13 && RoomManager::player->getHealth() == 0) {
+		RoomManager* previous = map;
+		delete previous;
+		map = new RoomManager();
+	}
+
 	if (key == '\x1B') {
 		exit(EXIT_SUCCESS);
+		delete map;
 	}
+
 	keyStates[key] = true;
 	glutPostRedisplay();
 }
@@ -42,18 +51,21 @@ void keyboardUp(unsigned char key, int x, int y) {
 //=================================================================================================
 // RENDERING
 //=================================================================================================
-RoomManager map = RoomManager();
 
 void display_func( void )
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	map.draw();
+	map->draw();
 
 	// Convert score to a string using stringstream
-	std::stringstream ss;
-	ss << "Score: " << RoomManager::score;
-	std::string scoreString = ss.str();
+	std::stringstream score;
+	score << "Score: " << RoomManager::score;
+	std::string scoreString = score.str();
+
+	std::stringstream health;
+	health << "Health: " << RoomManager::player->getHealth();
+	std::string healthString = health.str();
 
 	// Set the text color (white for example)
 	glColor3f(1.0f, 1.0f, 1.0f);
@@ -68,10 +80,25 @@ void display_func( void )
 
 	// Move the text to the top right corner
 	glRasterPos2f(0.8f, 0.96f);
-
-	// Render the score string using OpenGL functions
 	for (const char& character : scoreString) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, character); // Use a built-in font
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
+	}
+
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glRasterPos2f(-.98f, 0.96f);
+	for (const char& character : healthString) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
+	}
+
+	if (RoomManager::player->getHealth() <= 0) {
+		std::stringstream lose;
+		lose << "You Lost. Press Enter to Restart";
+		std::string loseString = lose.str();
+		glColor3f(1.0f, 0.0f, 0.0f);
+		glRasterPos2f(-0.2f, 0.0f);
+		for (const char& character : loseString) {
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, character); // Use a built-in font
+		}
 	}
 
 	glutSwapBuffers();
@@ -86,7 +113,7 @@ void update(int value) {
 	if (keyStates['a']) dx -= MOVESPEED;
 	if (keyStates['d']) dx += MOVESPEED;
 
-	if (keyStates[' ']) RoomManager::player->shoot();
+	if (keyStates[' '] && !RoomManager::currentRoom->getEnemies().empty()) RoomManager::player->shoot();
 	
 	// Normalize diagonal movement
 	if (dx != 0.0f && dy != 0.0f) {

@@ -21,6 +21,7 @@ Room* RoomManager::currentRoom = nullptr;
 Player* RoomManager::player = nullptr;
 float RoomManager::score = 0;
 float RoomManager::playerMS = 1.0f;
+
 static int generateRandomNumber(int min, int max) {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -120,6 +121,10 @@ void Room::draw()
 
 bool Room::check(float newX, float newY, Entity* entity)
 {
+    if (RoomManager::player->getHealth() == 0) {
+        return true;
+    }
+
     bool collides = false;
     for (auto& object : objects) {
         if (object->check(newX, newY, entity)) collides = true;
@@ -151,7 +156,7 @@ bool Room::check(float newX, float newY, Entity* entity)
         if (RoomManager::player->check(projectile->getX(), projectile->getY(), projectile) && projectile->Friendly()) {
             delete projectile;
             Room::projectiles.erase(Room::projectiles.begin() + index);
-            std::cout << "Player Health Decrease" << std::endl;
+            RoomManager::player->decreaseHealth();
             break;
         }
         
@@ -221,7 +226,7 @@ bool Room::check(float newX, float newY, Entity* entity)
                     else { roomNumber = generateRandomNumber(0, 3); RoomManager::score += 10; }
 
                     std::vector<Room*> rooms = {new LWallRoom(), new InvertedLWallRoom(), new WallRoom(), new InvertWallRoom(), 
-                                                new CenterPillarRoom(), new FourPillarRoom(), new FourPillarRoom(), new FourPillarRoom() };
+                                                new CenterPillarRoom(), new FourPillarRoom(), new TrapRoom(), new InvertedTrapRoom() };
 
                     Room* nextRoom = rooms[roomNumber];
                     for (auto& room : rooms) {
@@ -246,6 +251,44 @@ bool Room::check(float newX, float newY, Entity* entity)
     }
 
     return collides;
+}
+
+void Room::removeRoomMemory(Room* room) {
+    for (auto it = roomMemory.begin(); it != roomMemory.end(); ++it) {
+        if (it->second == room) {
+            roomMemory.erase(it);
+            break;
+        }
+    }
+}
+
+Room::~Room()
+{
+    if (!objects.empty()) {
+        for (auto& object : objects) {
+            delete object;
+        }
+    }
+    objects.clear();
+    if (!doors.empty()) {
+        for (auto& door : doors) {
+            delete door;
+        }
+    }
+    doors.clear();
+    if (!projectiles.empty()) {
+        for (auto& projectile : projectiles) {
+            delete projectile;
+        }
+    }
+    projectiles.clear();
+    if (!roomMemory.empty()) {
+        for (auto& room : roomMemory) {
+            room.second->removeRoomMemory(this);
+            delete room.second;
+        }
+    }
+    roomMemory.clear();
 }
 
 LWallRoom::LWallRoom() {
@@ -307,6 +350,11 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
+    //Enemy* enemy = new ShotgunEnemy(0.0f, 0.0f, 0.05f, 0.05f);
+    //enemy->setSpeed(1.5f);
+    //enemy->changeCooldown(std::chrono::milliseconds(1000));
+    //Room::enemies.push_back(enemy);
+
 }
 
 CenterPillarRoom::CenterPillarRoom() {
@@ -326,4 +374,40 @@ FourPillarRoom::FourPillarRoom() {
     Room::objects.push_back(new StatusTrap(-0.6f, 0.0f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 3.0f));
     Room::objects.push_back(new StatusTrap(0.0f, 0.6f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 3.0f));
     Room::objects.push_back(new StatusTrap(0.0f, -0.6f, 0.4f, 0.4f, std::chrono::milliseconds(1000), 3.0f));
+}
+
+TrapRoom::TrapRoom()
+{
+    float width = 0.7f;
+    float height = 0.05f;
+    Room::objects.push_back(new Wall(0.6f, 0.6f, width, height));
+    Room::objects.push_back(new Wall(-0.6f, 0.6f, width, height));
+    Room::objects.push_back(new Wall(0.6f, -0.6f, width, height));
+    Room::objects.push_back(new Wall(-0.6f, -0.6f, width, height));
+    Room::objects.push_back(new Wall(0.0f, 0.0f, width, height));
+
+    Room::objects.push_back(new DartTrap(0.0f, 0.0f, height, width, std::chrono::milliseconds(1000), 0));
+    Room::objects.push_back(new DartTrap(0.0f, 0.0f, height, width, std::chrono::milliseconds(1000), 180));
+    Room::objects.push_back(new DartTrap(-1.0f, 0.8f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 0));
+    Room::objects.push_back(new DartTrap(1.0f, 0.8f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 180));
+    Room::objects.push_back(new DartTrap(-1.0f, -0.8f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 0));
+    Room::objects.push_back(new DartTrap(1.0f, -0.8f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 180));
+}
+
+InvertedTrapRoom::InvertedTrapRoom()
+{
+    float width = 0.7f;
+    float height = 0.05f;
+    Room::objects.push_back(new Wall(0.6f, 0.6f, height, width));
+    Room::objects.push_back(new Wall(-0.6f, 0.6f, height, width));
+    Room::objects.push_back(new Wall(0.6f, -0.6f, height, width));
+    Room::objects.push_back(new Wall(-0.6f, -0.6f, height, width));
+    Room::objects.push_back(new Wall(0.0f, 0.0f, height, width));
+
+    Room::objects.push_back(new DartTrap(0.0f, 0.0f, height, width, std::chrono::milliseconds(1000), 0));
+    Room::objects.push_back(new DartTrap(0.0f, 0.0f, height, width, std::chrono::milliseconds(1000), 180));
+    Room::objects.push_back(new DartTrap(-0.8f, 1.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 270));
+    Room::objects.push_back(new DartTrap(0.8f, 1.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 270));
+    Room::objects.push_back(new DartTrap(-0.8f, -1.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 90));
+    Room::objects.push_back(new DartTrap(0.8f, -1.0f, 0.1f, 0.3f, std::chrono::milliseconds(1000), 90));
 }
