@@ -1,14 +1,18 @@
-﻿  Entity.h
+﻿  EnemyTypes.cpp
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\EnemyTypes.cpp(35,27): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\EnemyTypes.cpp(47,82): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\EnemyTypes.cpp(559,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  Entity.cpp
+  Entity.h
+  Items.cpp
+  RoomManager.cpp
+  Rooms.cpp
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.cpp(148,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.cpp(161,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\BasicOpenGLProject\Rooms.cpp(202,31): warning C4018: '<': signed/unsigned mismatch
+  Trap.cpp
+  main.cpp
+  Generating Code...
+  LINK : C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\Debug\BasicOpenGLProject.exe not found or not built by the last incremental link; performing full link
 Debug\Entity.obj : warning LNK4042: object specified more than once; extras ignored
-main.obj : error LNK2019: unresolved external symbol "public: virtual void __thiscall Entity::draw(void)" (?draw@Entity@@UAEXXZ) referenced in function "void __cdecl display_func(void)" (?display_func@@YAXXZ)
-RoomManager.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall Entity::draw(void)" (?draw@Entity@@UAEXXZ)
-Rooms.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall Entity::draw(void)" (?draw@Entity@@UAEXXZ)
-main.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall Entity::check(float,float,class Entity *)" (?check@Entity@@UAE_NMMPAV1@@Z)
-RoomManager.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall Entity::check(float,float,class Entity *)" (?check@Entity@@UAE_NMMPAV1@@Z)
-Rooms.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall Entity::check(float,float,class Entity *)" (?check@Entity@@UAE_NMMPAV1@@Z)
-main.obj : error LNK2019: unresolved external symbol "public: virtual void __thiscall Projectile::draw(void)" (?draw@Projectile@@UAEXXZ) referenced in function "public: void __thiscall Enemy::shoot(class std::vector<class Projectile,class std::allocator<class Projectile> > &)" (?shoot@Enemy@@QAEXAAV?$vector@VProjectile@@V?$allocator@VProjectile@@@std@@@std@@@Z)
-main.obj : error LNK2019: unresolved external symbol "public: virtual void __thiscall Enemy::draw(void)" (?draw@Enemy@@UAEXXZ) referenced in function "void __cdecl display_func(void)" (?display_func@@YAXXZ)
-Rooms.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall SpikeTrap::check(float,float,class Entity *)" (?check@SpikeTrap@@UAE_NMMPAVEntity@@@Z)
-Rooms.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall SpikeTrap::draw(void)" (?draw@SpikeTrap@@UAEXXZ)
-Rooms.obj : error LNK2019: unresolved external symbol "public: __thiscall LWall::LWall(float,float,float,float,int)" (??0LWall@@QAE@MMMMH@Z) referenced in function "public: __thiscall TierOneShortWallRoom::TierOneShortWallRoom(void)" (??0TierOneShortWallRoom@@QAE@XZ)
-C:\BindingOfIssac\Final Project\BasicOpenGLProject\Debug\BasicOpenGLProject.exe : fatal error LNK1120: 7 unresolved externals
+  BasicOpenGLProject.vcxproj -> C:\Users\samki\Desktop\Classes\CSE165\Final Project\BasicOpenGLProject\Debug\BasicOpenGLProject.exe

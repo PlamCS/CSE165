@@ -1,6 +1,6 @@
 #pragma once
-#include <chrono>
 #include "Entity.h"
+#include <chrono>
 
 class Trap :
 	public Entity {

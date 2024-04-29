@@ -1,34 +1,54 @@
-#include "Items.h"
 #include "RoomManager.h"
-#include <iostream>
+#include "Items.h"
+#include <atomic>
+#include <thread>
+#include <chrono>
 
-#include <atomic>   // Include atomic for atomic boolean
-#include <thread>   // Include thread for sleeping
-#include <chrono>   // Include chrono for time-related functions
+void Item::draw() {
+	// Set the number of segments for the circle
+	int numSegments = 100;
 
-// SHIELD SHAPE OR BOSS HEART
+	// Calculate radius based on width and height
+	float radius = (width + height);
 
-//glColor3f(1.0f, 0.0f, 0.0f);  // Red color
-	//glBegin(GL_TRIANGLES);
+	// Set color to red
+	glColor3f(0.75f, 0.75f, 0.75f);
 
-	// Bottom triangle
-	//glVertex2f(Entity::x, Entity::y - Entity::height / 2.0f);               // Bottom point
-	//glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 4.0f);  // Left point
-	//glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 4.0f);  // Right point
+	// Begin drawing triangle fan for the filled circle
+	glBegin(GL_TRIANGLE_FAN);
 
-	// Left lobe
-	//glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 4.0f);  // Left point
-	//glVertex2f(Entity::x, Entity::y + Entity::height / 2.0f);                   // Top-left curve
-	//glVertex2f(Entity::x, Entity::y + Entity::height / 4.0f);                   // Bottom-left curve
+	// Center of the circle
+	glVertex2f(x, y);
 
-	// Right lobe
-	//glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 4.0f);  // Right point
-	//glVertex2f(Entity::x, Entity::y + Entity::height / 2.0f);                   // Top-right curve
-	//glVertex2f(Entity::x, Entity::y + Entity::height / 4.0f);                   // Bottom-right curve
+	for (int i = 0; i <= numSegments; ++i) {
+		// Calculate angle for each segment
+		float theta = 2.0f * 3.1415926f * float(i) / float(numSegments);
 
-	//glEnd();
+		// Calculate x and y coordinates for the current segment
+		float xCoord = x + radius * cosf(theta);
+		float yCoord = y + radius * sinf(theta);
 
-// Heart Item
+		// Set vertex
+		glVertex2f(xCoord, yCoord);
+	}
+
+	// End drawing
+	glEnd();
+
+}
+
+bool Item::check(float dx, float dy, Entity* object) {
+	bool condition = (dx - object->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
+		dx + object->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
+		dy - object->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
+		dy + object->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
+
+	if (condition) {
+		RoomManager::score += 15;
+		return true;
+	}
+	return false;
+}
 
 void Heart::draw(){
 	// Set the width and height of the rhombus
@@ -101,11 +121,9 @@ bool SpeedBuff::check(float dx, float dy, Entity* object) {
 			});
 		cooldownThread.detach();
 		RoomManager::player->setSpeed(RoomManager::player->getSpeed() + 0.25f);
-		std::cout << "Move" << std::endl;
 		std::thread secondCooldownThread([this]() {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 			RoomManager::player->setSpeed(RoomManager::player->getSpeed() - 0.25f);
-			std::cout << "Stop" << std::endl;
 			});
 		secondCooldownThread.detach();
 		return true;
@@ -148,7 +166,46 @@ bool AntiInvincible::check(float dx, float dy, Entity* object) {
 		dy - object->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
 		dy + object->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
 	if (condition) {
-		RoomManager::currentRoom->getEnemies()[0]->decreaseHealth();
+		if (!RoomManager::currentRoom->getEnemies().empty()) {
+			RoomManager::currentRoom->getEnemies()[0]->decreaseHealth();
+		}
+		return true;
+	}
+	return false;
+}
+
+void BossHeart::draw()
+{
+	glColor3f(1.0f, 0.0f, 0.0f);  // Red color
+	glBegin(GL_TRIANGLES);
+
+	// Bottom triangle
+	glVertex2f(Entity::x, Entity::y - Entity::height / 2.0f);               // Bottom point
+	glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 4.0f);  // Left point
+	glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 4.0f);  // Right point
+
+	// Left lobe
+	glVertex2f(Entity::x - Entity::width / 2.0f, Entity::y + Entity::height / 4.0f);  // Left point
+	glVertex2f(Entity::x, Entity::y + Entity::height / 2.0f);                   // Top-left curve
+	glVertex2f(Entity::x, Entity::y + Entity::height / 4.0f);                   // Bottom-left curve
+
+	// Right lobe
+	glVertex2f(Entity::x + Entity::width / 2.0f, Entity::y + Entity::height / 4.0f);  // Right point
+	glVertex2f(Entity::x, Entity::y + Entity::height / 2.0f);                   // Top-right curve
+	glVertex2f(Entity::x, Entity::y + Entity::height / 4.0f);                   // Bottom-right curve
+
+	glEnd();
+}
+
+bool BossHeart::check(float dx, float dy, Entity* entity)
+{
+	bool condition = (dx - entity->getWidth() / 2.0f <= Entity::getX() + Entity::getWidth() / 2.0f &&
+						dx + entity->getWidth() / 2.0f >= Entity::getX() - Entity::getWidth() / 2.0f &&
+						dy - entity->getHeight() / 2.0f <= Entity::getY() + Entity::getHeight() / 2.0f &&
+						dy + entity->getHeight() / 2.0f >= Entity::getY() - Entity::getHeight() / 2.0f);
+
+	if (condition) {
+		RoomManager::player->setWinCondition();
 		return true;
 	}
 	return false;

@@ -1,4 +1,5 @@
 #pragma once
+#include "EnemyTypes.h"
 #include "Entity.h"
 #include <vector>
 #include <map>

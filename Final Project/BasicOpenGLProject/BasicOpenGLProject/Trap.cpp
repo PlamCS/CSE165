@@ -1,5 +1,5 @@
-#include "RoomManager.h"
 #include "Trap.h"
+#include "RoomManager.h"
 
 void SpikeTrap::Activate()
 {
@@ -24,7 +24,7 @@ bool SpikeTrap::check(float x, float y, Entity* object)
         std::thread damageThread([this]() {
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
             if (SpikeTrap::activated) {
-                RoomManager::score -= 10;
+                RoomManager::player->decreaseHealth();
             }
             });
         damageThread.detach();

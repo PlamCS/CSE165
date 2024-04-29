@@ -135,15 +135,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EnemyTypes.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Entity.h" />
+    <ClCompile Include="Items.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RoomManager.cpp" />
     <ClCompile Include="Rooms.cpp" />
+    <ClCompile Include="Trap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EnemyTypes.h" />
+    <ClInclude Include="Items.h" />
     <ClInclude Include="RoomManager.h" />
     <ClInclude Include="Rooms.h" />
+    <ClInclude Include="Trap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

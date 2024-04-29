@@ -1,6 +1,6 @@
 #include <GL/freeglut.h>
-#include <iostream>
 #include "RoomManager.h"
+#include <iostream>
 #include <sstream>
 
 //=================================================================================================
@@ -29,7 +29,7 @@ void initallizeKeys() {
 
 void keyboardDown( unsigned char key, int x, int y )
 {
-	if (key == 13 && RoomManager::player->getHealth() == 0) {
+	if (key == 13 && (RoomManager::player->getHealth() == 0 || RoomManager::player->isWinner()) ) {
 		RoomManager* previous = map;
 		delete previous;
 		map = new RoomManager();
@@ -75,7 +75,7 @@ void display_func( void )
 	map->draw();
 
 	// Move the text to the top right corner
-	glRasterPos2f(0.8f, 0.96f);
+	glRasterPos2f(0.75f, 0.96f);
 	for (const char& character : scoreString) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, character); // Use a built-in font
 	}
@@ -87,12 +87,20 @@ void display_func( void )
 		glColor3f(1.0f, 0.0f, 0.0f);
 		glRasterPos2f(-(float)(loseString.length() / 100) - 0.35f, 0.0f);
 		for (const char& character : loseString) {
-			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, character); // Use a built-in font
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, character);
+		}
+	}
+	else if (RoomManager::player->isWinner()) {
+		std::stringstream winner;
+		winner << "Winner Winner Chicken Dinner! Press Enter to Restart";
+		std::string winnerString = winner.str();
+		glColor3f(0.0f, 1.0f, 0.0f);
+		glRasterPos2f(-(float)(winnerString.length() / 100) - 0.65f, 0.0f);
+		for (const char& character : winnerString) {
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, character);
 		}
 	}
 	
-
-
 	glutSwapBuffers();
 }
 

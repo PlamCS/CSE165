@@ -1,8 +1,6 @@
-#include "RoomManager.h"
-#include "Trap.h"
 #include "Rooms.h"
-#include "EnemyTypes.h"
-#include "Items.h"
+#include "Trap.h"
+#include "RoomManager.h"
 #include <random>
 #include <sstream>
 #include <iostream>
@@ -140,8 +138,7 @@ void Room::draw()
 bool Room::check(float newX, float newY, Entity* entity)
 {
     bool collides = false;
-
-    if (RoomManager::player->getHealth() == 0) {
+    if (RoomManager::player->getHealth() == 0 || RoomManager::player->isWinner() ) {
         return true;
     }
 
@@ -156,7 +153,6 @@ bool Room::check(float newX, float newY, Entity* entity)
             break;
         }
     }
-
 
     for (int index = 0; index < Room::projectiles.size(); ++index) {
         Projectile* projectile = Room::projectiles[index];
@@ -194,9 +190,6 @@ bool Room::check(float newX, float newY, Entity* entity)
             RoomManager::player->decreaseHealth();
             break;
         }
-
-        
-        
     }
 
     for (int index = 0; index < Room::enemies.size(); ++index) {
@@ -205,17 +198,18 @@ bool Room::check(float newX, float newY, Entity* entity)
         float dx = (RoomManager::player->getX() > enemy->getX()) ? 0.008f : (RoomManager::player->getX() < enemy->getX()) ? -0.008f : 0.0f;
         float dy = (RoomManager::player->getY() > enemy->getY()) ? 0.008f : (RoomManager::player->getY() < enemy->getY()) ? -0.008f : 0.0f;
 
-        if (enemy->getHealth() == 0) enemy->Mark();
+        if (enemy->getHealth() <= 0) enemy->Mark();
         for (auto& object : objects) {
             if (enemy->check(object->getX(), object->getY(), object)) collides = true;
         }
 
         if (!enemy->isMarked()) enemy->move(dx, dy);
-        if (!enemy->isReady()) {
+        if (!enemy->isReady() && !(dynamic_cast<RunnerEnemy*>(enemy))) {
             enemy->shoot();
         }
         
         if (enemy->isMarked()) {
+            Room::objects.push_back(enemy->dropItem());
             delete enemy;
             Room::enemies.erase(Room::enemies.begin() + index);
             index--;
@@ -241,21 +235,19 @@ bool Room::check(float newX, float newY, Entity* entity)
 
                     // Handles New Room Creation (What Kind of Room)
                     int roomNumber = 0;
-                    if (doorTier > 97) roomNumber = 11;
+                    if (doorTier > 97) roomNumber = 10;
                     else if (doorTier > 80) roomNumber = generateRandomNumber(8, 9);
                     else if (doorTier > 50) { roomNumber = generateRandomNumber(4, 7); RoomManager::score += 25; }
                     else { roomNumber = generateRandomNumber(0, 3); RoomManager::score += 10; }
 
                     std::vector<Room*> rooms = { new LWallRoom(), new InvertedLWallRoom(), new WallRoom(), new InvertWallRoom(),
                                                 new CenterPillarRoom(), new FourPillarRoom(), new TrapRoom(), new InvertedTrapRoom(),
-                                                new ShotgunRoom(), new InvincibleRoom() };
+                                                new ShotgunRoom(), new InvincibleRoom(), new FinalBossRoom()};
 
                     Room* nextRoom = rooms[roomNumber];
                     for (auto& room : rooms) {
                         if (room != nextRoom) delete room;
                     }
-                    //RoomManager::enemies = generateRandomNumber(2, 5);
-
                     if (doorTier < 97) {
                         RoomManager::currentRoom->addRoomMemory(enteringDoor, nextRoom);
                         nextRoom->addRoomMemory(returnDoor, RoomManager::currentRoom);
@@ -304,12 +296,13 @@ bool Room::check(float newX, float newY, Entity* entity)
                             else
                                 enemyIndex = generateRandomNumber(0, 3);
                             RoomManager::currentRoom->getEnemies().push_back(createEnemies[enemyIndex]);
-                            createEnemies[enemyIndex]->setSpeed(1.0f);
 
                             for (auto& enemy : createEnemies) {
                                 if (enemy != createEnemies[enemyIndex]) delete enemy;
                             }
                             createEnemies.clear();
+                            
+                            
                         }
                     }
                 }
@@ -445,16 +438,6 @@ BeginningRoom::BeginningRoom()
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.03f, 0.0f, 0.2f, 0.2f, false));
     Room::doors.push_back(new Door(1.5f, 0.0f, 0.2f, 0.2f, false));
-
-    Room::objects.push_back(new Wall(-0.5f, -0.5f, 0.075f, 0.075f));
-    Room::objects.push_back(new Wall(0.5f, -0.5f, 0.075f, 0.075f));
-    Room::objects.push_back(new Wall(-0.5f, 0.5f, 0.075f, 0.075f));
-    Room::objects.push_back(new Wall(0.5f, 0.5f, 0.075f, 0.075f));
-
-
-    /*Enemy* enemyTest = new Enemy(0.4f, 0.4f, 0.1f, 0.1f);
-    enemyTest->setSpeed(1.0f);
-    Room::enemies.push_back(enemyTest);*/
 }
 
 CenterPillarRoom::CenterPillarRoom() {
@@ -545,7 +528,7 @@ ShotgunRoom::ShotgunRoom()
 InvincibleRoom::InvincibleRoom()
 {
     Enemy* enemy = new InvincibleEnemy(0.0f, 0.0f, 0.15f, 0.15f);
-    enemy->setHealth(100);
+    enemy->setHealth(10);
     Room::enemies.push_back(enemy);
 }
 
@@ -555,8 +538,9 @@ FinalBossRoom::FinalBossRoom()
         delete door;
     }
     Room::doors.clear();
+
     Boss* boss = new Boss(0.0f, 0.0f, 0.4f, 0.4f);
-    boss->setHealth(600);
+    boss->setHealth(300);
     boss->changeCooldown(std::chrono::milliseconds(500));
     Room::enemies.push_back(boss);
 
